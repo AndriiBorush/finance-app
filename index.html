@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Финансы">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Финансы</title>
+<style>
+:root{--bg:#0f1115;--card:#171a21;--line:#262b36;--text:#eef1f6;--muted:#8a93a6;--green:#34c77b;--red:#ff6b6b;--accent:#6c8cff;--r:16px}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#f4f5f8;--card:#fff;--line:#e4e7ee;--text:#171a21;--muted:#6b7385;--green:#16a365;--red:#e04848;--accent:#4664e6}}
+:root[data-theme="dark"]{--bg:#0f1115;--card:#171a21;--line:#262b36;--text:#eef1f6;--muted:#8a93a6;--green:#34c77b;--red:#ff6b6b;--accent:#6c8cff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,system-ui,"SF Pro Text",sans-serif}
+header{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top) + 12px) 16px 10px;background:var(--bg)}
+header h1{font-size:22px;margin:0}
+main{padding:0 16px calc(env(safe-area-inset-bottom) + 120px);max-width:560px;margin:0 auto}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+input,select{font:inherit;font-size:17px;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;width:100%}
+input[type=color]{height:46px;padding:4px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.card.list{padding:4px 14px}
+.balance b{font-size:32px;display:block}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row2 .card{margin:0}
+small{color:var(--muted);font-size:13px;display:block}
+.pos{color:var(--green)} .neg{color:var(--red)}
+.muted{color:var(--muted)} .center{text-align:center} .small{font-size:13px}
+.big{font-size:28px;display:block}
+h3{font-size:15px;color:var(--muted);margin:18px 4px 8px;font-weight:600}
+.mnav{display:flex;align-items:center;justify-content:space-between;margin:4px 0 12px}
+.mnav span{font-weight:600}
+.mnav button{font-size:28px;width:44px;height:36px}
+.chips{display:flex;gap:8px;overflow-x:auto;margin-bottom:10px;padding-bottom:2px}
+.chip{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);white-space:nowrap;font-size:14px}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.op{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 0;border-bottom:1px solid var(--line)}
+.op:last-child{border-bottom:0}
+.op-main{flex:1;display:flex;flex-direction:column;min-width:0}
+.op-main b{font-weight:500}
+.op-sum{font-weight:600;white-space:nowrap}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;flex:none}
+.dot.big{width:14px;height:14px;margin:0}
+.day{display:flex;justify-content:space-between;margin:14px 4px 6px;color:var(--muted);font-size:14px}
+.bar{margin:12px 0}
+.bar-top{display:flex;justify-content:space-between;font-size:15px;gap:8px}
+.bar-top span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.track{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:6px}
+.track div{height:100%;border-radius:99px}
+.btn{background:var(--accent);color:#fff;border-radius:12px;padding:10px 16px;font-weight:600}
+.btn.ghost{background:none;color:var(--accent);font-weight:500;padding:10px 4px}
+.btn.danger{background:var(--red);color:#fff}
+.wide{display:block;width:100%;margin:10px 0;text-align:center;padding:14px}
+.field{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted);margin-bottom:12px}
+.sheet{position:fixed;inset:0;display:none;z-index:20}
+.sheet.open{display:block}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.panel{position:absolute;left:0;right:0;bottom:0;max-height:90vh;overflow:auto;background:var(--card);border-radius:22px 22px 0 0;padding:14px 16px calc(env(safe-area-inset-bottom) + 16px)}
+.panel h2{font-size:18px;margin:0 0 10px}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.tabs{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;align-items:center;background:var(--card);border-top:1px solid var(--line);padding:6px 0 calc(env(safe-area-inset-bottom) + 6px);z-index:10}
+.tabs button{display:flex;flex-direction:column;align-items:center;font-size:20px;flex:1}
+.tabs span{font-size:11px;color:var(--muted)}
+.tabs button.on span{color:var(--accent)}
+.tabs .fab{flex:0 0 56px;width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;font-size:30px;line-height:1;justify-content:center;margin-top:-18px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.gear{font-size:22px}
+.chart{width:100%;height:auto}
+.chart text{fill:var(--muted);font-size:11px}
+.legend{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center;justify-content:center;margin-top:8px}
+.legend i{width:10px;height:10px;border-radius:50%;display:inline-block;margin-left:10px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Финансы</h1>
+  <button class="gear" data-act="tab" data-v="settings" aria-label="Настройки">⚙️</button>
+</header>
+
+<main id="view"></main>
+
+<nav class="tabs">
+  <button data-act="tab" data-v="home"><span>🏠</span><span>Главная</span></button>
+  <button data-act="tab" data-v="ops"><span>📋</span><span>Операции</span></button>
+  <button class="fab" data-act="addOp" aria-label="Добавить операцию">+</button>
+  <button data-act="tab" data-v="reports"><span>📊</span><span>Отчёты</span></button>
+  <button data-act="tab" data-v="cats"><span>🏷️</span><span>Категории</span></button>
+</nav>
+
+<div id="sheet" class="sheet">
+  <div class="scrim" data-act="closeSheet"></div>
+  <div class="panel" id="sheet-body"></div>
+</div>
+
+<script>
+const KEY = 'finance-app-v1';
+const $ = s => document.querySelector(s);
+const view = $('#view');
+
+const DEFAULT_CATS = [
+  {id:'e1', name:'Продукты', color:'#34c77b', type:'expense'},
+  {id:'e2', name:'Кафе и доставка', color:'#ff9f43', type:'expense'},
+  {id:'e3', name:'Транспорт', color:'#4da6ff', type:'expense'},
+  {id:'e4', name:'Жильё и коммуналка', color:'#a77bff', type:'expense'},
+  {id:'e5', name:'Связь и интернет', color:'#ffd166', type:'expense'},
+  {id:'e6', name:'Здоровье', color:'#ff6b9a', type:'expense'},
+  {id:'e7', name:'Хобби', color:'#26c6da', type:'expense'},
+  {id:'e8', name:'Прочее', color:'#8a93a6', type:'expense'},
+  {id:'i1', name:'Зарплата', color:'#34c77b', type:'income'},
+  {id:'i2', name:'Подработка', color:'#4da6ff', type:'income'},
+  {id:'i3', name:'Прочее', color:'#8a93a6', type:'income'}
+];
+
+function freshDb(){ return {currency:'₴', cats: JSON.parse(JSON.stringify(DEFAULT_CATS)), ops: []}; }
+
+function load(){
+  try {
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if (d && Array.isArray(d.cats) && Array.isArray(d.ops)) return d;
+  } catch (e) {}
+  return freshDb();
+}
+let db = load();
+
+function save(){
+  try { localStorage.setItem(KEY, JSON.stringify(db)); }
+  catch (e) { alert('Не удалось сохранить данные. Проверьте место в телефоне.'); }
+}
+
+let tab = 'home';
+let month = todayISO().slice(0,7);
+let opFilter = 'all', opSort = 'date', repType = 'expense', catType = 'expense';
+let editId = null, draft = null, catEdit = null;
+
+function todayISO(){
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0,10);
+}
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function money(n){ return new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2}).format(n) + ' ' + db.currency; }
+function fmtDate(iso){ const [y,m,d] = iso.split('-'); return `${d}.${m}.${y}`; }
+function shift(ym, delta){
+  let [y, m] = ym.split('-').map(Number);
+  m += delta;
+  while (m < 1) { m += 12; y--; }
+  while (m > 12) { m -= 12; y++; }
+  return `${y}-${String(m).padStart(2,'0')}`;
+}
+function monthTitle(ym){
+  const [y, m] = ym.split('-').map(Number);
+  const s = new Date(y, m-1, 1).toLocaleString('ru-RU', {month:'long', year:'numeric'});
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function cat(id){ return db.cats.find(c => c.id === id) || {id:'', name:'Без категории', color:'#8a93a6'}; }
+function sumBy(list){ return list.reduce((a, o) => a + o.amount, 0); }
+function opsOf(ym){ return db.ops.filter(o => o.date.startsWith(ym)); }
+function sums(ym){
+  const l = opsOf(ym);
+  return {inc: sumBy(l.filter(o => o.type === 'income')), exp: sumBy(l.filter(o => o.type === 'expense'))};
+}
+function catTotals(ym, type){
+  const map = {};
+  opsOf(ym).filter(o => o.type === type).forEach(o => { map[o.catId] = (map[o.catId] || 0) + o.amount; });
+  return Object.entries(map)
+    .map(([id, total]) => ({...cat(id), total}))
+    .sort((a, b) => b.total - a.total);
+}
+function byDateDesc(a, b){ return b.date.localeCompare(a.date) || b.id.localeCompare(a.id); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function chip(v, label, act, cur){
+  return `<button class="chip ${cur === v ? 'on' : ''}" data-act="${act}" data-v="${v}">${label}</button>`;
+}
+function monthNav(){
+  return `<div class="mnav"><button data-act="prev" aria-label="Назад">‹</button><span>${monthTitle(month)}</span><button data-act="next" aria-label="Вперёд">›</button></div>`;
+}
+function bar(t, max, total){
+  const pct = total ? Math.round(t.total / total * 100) : 0;
+  return `<div class="bar">
+    <div class="bar-top"><span><i class="dot" style="background:${t.color}"></i>${esc(t.name)}</span><b>${money(t.total)} · ${pct}%</b></div>
+    <div class="track"><div style="width:${(t.total / max * 100).toFixed(1)}%;background:${t.color}"></div></div>
+  </div>`;
+}
+function opRow(o){
+  const c = cat(o.catId);
+  const sign = o.type === 'income' ? '+' : '−';
+  return `<button class="op" data-act="editOp" data-id="${o.id}">
+    <i class="dot big" style="background:${c.color}"></i>
+    <span class="op-main"><b>${esc(c.name)}</b><small>${o.note ? esc(o.note) + ' · ' : ''}${fmtDate(o.date)}</small></span>
+    <span class="op-sum ${o.type === 'income' ? 'pos' : 'neg'}">${sign}${money(o.amount)}</span>
+  </button>`;
+}
+function chart(){
+  const months = [0,1,2,3,4,5].map(i => shift(month, i - 5));
+  const data = months.map(m => sums(m));
+  const max = Math.max(1, ...data.map(d => Math.max(d.inc, d.exp)));
+  const W = 320, H = 150, gw = W / 6, bw = gw * 0.3;
+  return `<svg viewBox="0 0 ${W} ${H + 22}" class="chart">${data.map((d, i) => {
+    const x = i * gw + gw * 0.15;
+    const hi = d.inc / max * H, he = d.exp / max * H;
+    return `<rect x="${x}" y="${H - hi}" width="${bw}" height="${hi}" rx="4" fill="var(--green)"/>
+      <rect x="${x + bw + 3}" y="${H - he}" width="${bw}" height="${he}" rx="4" fill="var(--red)"/>
+      <text x="${x + bw}" y="${H + 16}" text-anchor="middle">${months[i].slice(5)}</text>`;
+  }).join('')}</svg>`;
+}
+
+const views = {
+  home(){
+    const bal = sumBy(db.ops.filter(o => o.type === 'income')) - sumBy(db.ops.filter(o => o.type === 'expense'));
+    const s = sums(month);
+    const totalExp = s.exp;
+    const top = catTotals(month, 'expense').slice(0, 5);
+    const max = top[0] ? top[0].total : 1;
+    const last = [...db.ops].sort(byDateDesc).slice(0, 5);
+    return `${monthNav()}
+      <div class="card balance"><small>Баланс за всё время</small><b class="${bal < 0 ? 'neg' : ''}">${money(bal)}</b></div>
+      <div class="row2">
+        <div class="card"><small>Доходы за месяц</small><b class="pos">${money(s.inc)}</b></div>
+        <div class="card"><small>Расходы за месяц</small><b class="neg">${money(s.exp)}</b></div>
+      </div>
+      <h3>Топ категорий расходов</h3>
+      <div class="card">${top.length ? top.map(t => bar(t, max, totalExp)).join('') : '<p class="muted">Расходов за этот месяц пока нет</p>'}</div>
+      <h3>Последние операции</h3>
+      <div class="card list">${last.length ? last.map(opRow).join('') : '<p class="muted">Операций пока нет. Нажмите «+», чтобы добавить первую.</p>'}</div>`;
+  },
+
+  ops(){
+    let list = opsOf(month);
+    if (opFilter !== 'all') list = list.filter(o => o.type === opFilter);
+    list = list.sort(opSort === 'amount' ? (a, b) => b.amount - a.amount : byDateDesc);
+    let body;
+    if (!list.length) body = '<p class="muted center">Операций за этот месяц нет</p>';
+    else if (opSort === 'amount') body = `<div class="card list">${list.map(opRow).join('')}</div>`;
+    else {
+      const groups = {};
+      list.forEach(o => { (groups[o.date] = groups[o.date] || []).push(o); });
+      body = Object.keys(groups).map(d => {
+        const g = groups[d];
+        const net = sumBy(g.filter(o => o.type === 'income')) - sumBy(g.filter(o => o.type === 'expense'));
+        return `<div class="day"><span>${fmtDate(d)}</span><span>${money(net)}</span></div>
+          <div class="card list">${g.map(opRow).join('')}</div>`;
+      }).join('');
+    }
+    return `${monthNav()}
+      <div class="chips">${chip('all','Все','setFilter',opFilter)}${chip('expense','Расходы','setFilter',opFilter)}${chip('income','Доходы','setFilter',opFilter)}</div>
+      <div class="chips">${chip('date','По дате','setSort',opSort)}${chip('amount','По сумме','setSort',opSort)}</div>
+      ${body}`;
+  },
+
+  reports(){
+    const s = sums(month);
+    const list = catTotals(month, repType);
+    const total = list.reduce((a, t) => a + t.total, 0);
+    const max = list[0] ? list[0].total : 1;
+    return `${monthNav()}
+      <div class="chips">${chip('expense','Расходы','setRepType',repType)}${chip('income','Доходы','setRepType',repType)}</div>
+      <div class="card center"><small>${repType === 'expense' ? 'Всего расходов' : 'Всего доходов'}</small><b class="big">${money(total)}</b></div>
+      <h3>По категориям</h3>
+      <div class="card">${list.length ? list.map(t => bar(t, max, total)).join('') : '<p class="muted">Нет данных за этот месяц</p>'}</div>
+      <h3>Последние 6 месяцев</h3>
+      <div class="card">${chart()}
+        <div class="legend"><i style="background:var(--green)"></i>доходы<i style="background:var(--red)"></i>расходы</div>
+      </div>
+      <p class="muted small center">Доходов за месяц: ${money(s.inc)} · Расходов: ${money(s.exp)}</p>`;
+  },
+
+  cats(){
+    const list = db.cats.filter(c => c.type === catType);
+    const rows = list.map(c => {
+      const n = db.ops.filter(o => o.catId === c.id).length;
+      return `<button class="op" data-act="editCat" data-id="${c.id}">
+        <i class="dot big" style="background:${c.color}"></i>
+        <span class="op-main"><b>${esc(c.name)}</b><small>${n} операций</small></span>
+        <span class="muted">✎</span></button>`;
+    }).join('');
+    return `<div class="chips">${chip('expense','Расходы','setCatType',catType)}${chip('income','Доходы','setCatType',catType)}</div>
+      <div class="card list">${rows || '<p class="muted">Категорий нет</p>'}</div>
+      <button class="btn wide" data-act="addCat">+ Новая категория</button>`;
+  },
+
+  settings(){
+    return `<div class="card">
+        <label class="field">Валюта
+          <input id="cur" value="${esc(db.currency)}" maxlength="5">
+        </label>
+      </div>
+      <div class="card list">
+        <button class="op" data-act="exportData"><span class="op-main"><b>Сохранить резервную копию</b><small>Файл с вашими данными</small></span></button>
+        <label class="op"><span class="op-main"><b>Загрузить резервную копию</b><small>Выбрать файл из сохранённых</small></span>
+          <input type="file" id="imp" accept="application/json,.json" hidden></label>
+        <button class="op" data-act="reset"><span class="op-main"><b class="neg">Стереть всё</b><small>Удалить все операции и категории</small></span></button>
+      </div>
+      <p class="muted small">Данные хранятся только в этом телефоне и браузере. Делайте резервную копию, если меняете телефон.</p>`;
+  }
+};
+
+function render(){
+  view.innerHTML = views[tab]();
+  document.querySelectorAll('.tabs [data-act="tab"]').forEach(b => b.classList.toggle('on', b.dataset.v === tab));
+  document.querySelector('header .gear').classList.toggle('on', tab === 'settings');
+}
+
+/* ---------- Нижние окна (sheet) ---------- */
+function sheet(html){ $('#sheet-body').innerHTML = html; $('#sheet').classList.add('open'); }
+function closeSheet(){ $('#sheet').classList.remove('open'); editId = null; catEdit = null; }
+
+function readDraft(){
+  if (!$('#f-amount')) return;
+  draft.amount = $('#f-amount').value;
+  draft.catId = $('#f-cat').value;
+  draft.date = $('#f-date').value;
+  draft.note = $('#f-note').value;
+}
+function openOp(id){
+  const op = id ? db.ops.find(o => o.id === id) : null;
+  editId = id || null;
+  draft = op ? {...op} : {type:'expense', amount:'', catId:'', date:todayISO(), note:''};
+  drawOp();
+}
+function drawOp(){
+  const list = db.cats.filter(c => c.type === draft.type);
+  if (!list.some(c => c.id === draft.catId)) draft.catId = list[0] ? list[0].id : '';
+  sheet(`<div class="sheet-head">
+      <button class="btn ghost" data-act="closeSheet">Отмена</button>
+      <h2>${editId ? 'Операция' : 'Новая операция'}</h2>
+      <button class="btn" data-act="saveOp">Готово</button>
+    </div>
+    <div class="chips">${chip('expense','Расход','setDraftType',draft.type)}${chip('income','Доход','setDraftType',draft.type)}</div>
+    <label class="field">Сумма
+      <input id="f-amount" inputmode="decimal" placeholder="0" value="${esc(draft.amount)}">
+    </label>
+    <label class="field">Категория
+      <select id="f-cat">${list.map(c => `<option value="${c.id}" ${c.id === draft.catId ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
+    </label>
+    <label class="field">Дата
+      <input id="f-date" type="date" value="${draft.date}">
+    </label>
+    <label class="field">Заметка
+      <input id="f-note" value="${esc(draft.note)}" placeholder="Необязательно">
+    </label>
+    ${editId ? '<button class="btn danger wide" data-act="delOp">Удалить операцию</button>' : ''}`);
+}
+function saveOp(){
+  readDraft();
+  const amt = parseFloat(String(draft.amount).replace(',', '.'));
+  if (!(amt > 0)) return alert('Введите сумму больше нуля');
+  if (!draft.catId) return alert('Сначала создайте категорию этого типа');
+  const rec = {id: editId || uid(), type: draft.type, amount: Math.round(amt * 100) / 100,
+    catId: draft.catId, date: draft.date || todayISO(), note: (draft.note || '').trim()};
+  const i = db.ops.findIndex(o => o.id === editId);
+  if (i >= 0) db.ops[i] = rec; else db.ops.push(rec);
+  save(); closeSheet(); render();
+}
+function delOp(){
+  if (!confirm('Удалить операцию?')) return;
+  db.ops = db.ops.filter(o => o.id !== editId);
+  save(); closeSheet(); render();
+}
+
+function openCat(id){
+  const c = id ? db.cats.find(x => x.id === id) : {name:'', color:'#6c8cff', type: catType};
+  catEdit = id || null;
+  sheet(`<div class="sheet-head">
+      <button class="btn ghost" data-act="closeSheet">Отмена</button>
+      <h2>${id ? 'Категория' : 'Новая категория'}</h2>
+      <button class="btn" data-act="saveCat">Готово</button>
+    </div>
+    <label class="field">Название<input id="c-name" value="${esc(c.name)}"></label>
+    <label class="field">Цвет<input id="c-color" type="color" value="${c.color}"></label>
+    <label class="field">Тип
+      <select id="c-type">
+        <option value="expense" ${c.type === 'expense' ? 'selected' : ''}>Расход</option>
+        <option value="income" ${c.type === 'income' ? 'selected' : ''}>Доход</option>
+      </select>
+    </label>
+    ${id ? '<button class="btn danger wide" data-act="delCat">Удалить категорию</button>' : ''}`);
+}
+function saveCat(){
+  const name = $('#c-name').value.trim();
+  if (!name) return alert('Введите название');
+  const data = {name, color: $('#c-color').value, type: $('#c-type').value};
+  if (catEdit) Object.assign(db.cats.find(x => x.id === catEdit), data);
+  else db.cats.push({id: uid(), ...data});
+  save(); closeSheet(); render();
+}
+function delCat(){
+  const c = db.cats.find(x => x.id === catEdit);
+  const others = db.cats.filter(x => x.id !== c.id && x.type === c.type);
+  if (!others.length) return alert('Сначала создайте другую категорию такого же типа');
+  sheet(`<h2>Удалить «${esc(c.name)}»</h2>
+    <p class="muted">Её операции перенесём в выбранную категорию:</p>
+    <label class="field">Перенести в
+      <select id="d-to">${others.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select>
+    </label>
+    <button class="btn danger wide" data-act="confirmDelCat">Удалить</button>
+    <button class="btn ghost wide" data-act="closeSheet">Отмена</button>`);
+}
+function confirmDelCat(){
+  const to = $('#d-to').value;
+  db.ops.forEach(o => { if (o.catId === catEdit) o.catId = to; });
+  db.cats = db.cats.filter(x => x.id !== catEdit);
+  save(); closeSheet(); render();
+}
+
+/* ---------- Резервная копия ---------- */
+function exportData(){
+  const blob = new Blob([JSON.stringify(db, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `finance-backup-${todayISO()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+function importFile(f){
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (!Array.isArray(d.cats) || !Array.isArray(d.ops)) throw new Error('bad');
+      db = {currency: d.currency || '₴', cats: d.cats, ops: d.ops};
+      save(); render(); alert('Данные загружены');
+    } catch (e) { alert('Этот файл не похож на резервную копию'); }
+  };
+  r.readAsText(f);
+}
+
+/* ---------- Обработка нажатий ---------- */
+const H = {
+  tab(el){ tab = el.dataset.v; render(); },
+  prev(){ month = shift(month, -1); render(); },
+  next(){ month = shift(month, 1); render(); },
+  setFilter(el){ opFilter = el.dataset.v; render(); },
+  setSort(el){ opSort = el.dataset.v; render(); },
+  setRepType(el){ repType = el.dataset.v; render(); },
+  setCatType(el){ catType = el.dataset.v; render(); },
+  setDraftType(el){ readDraft(); draft.type = el.dataset.v; drawOp(); },
+  addOp(){ openOp(null); },
+  editOp(el){ openOp(el.dataset.id); },
+  saveOp, delOp,
+  addCat(){ openCat(null); },
+  editCat(el){ openCat(el.dataset.id); },
+  saveCat, delCat, confirmDelCat,
+  exportData,
+  reset(){
+    if (!confirm('Стереть все операции и категории? Это нельзя отменить.')) return;
+    db = freshDb(); save(); render();
+  },
+  closeSheet
+};
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (el && H[el.dataset.act]) H[el.dataset.act](el);
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'cur') { db.currency = e.target.value.trim() || '₴'; save(); render(); }
+  if (e.target.id === 'imp' && e.target.files[0]) importFile(e.target.files[0]);
+});
+
+render();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
