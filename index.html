@@ -3,487 +3,1771 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0f1115">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Финансы">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-180.png">
-<title>Финансы</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Финансы — макет приложения</title>
 <style>
-:root{--bg:#0f1115;--card:#171a21;--line:#262b36;--text:#eef1f6;--muted:#8a93a6;--green:#34c77b;--red:#ff6b6b;--accent:#6c8cff;--r:16px}
-@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#f4f5f8;--card:#fff;--line:#e4e7ee;--text:#171a21;--muted:#6b7385;--green:#16a365;--red:#e04848;--accent:#4664e6}}
-:root[data-theme="dark"]{--bg:#0f1115;--card:#171a21;--line:#262b36;--text:#eef1f6;--muted:#8a93a6;--green:#34c77b;--red:#ff6b6b;--accent:#6c8cff}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,system-ui,"SF Pro Text",sans-serif}
-header{position:sticky;top:0;z-index:5;display:flex;justify-content:flex-end;align-items:center;padding:calc(env(safe-area-inset-top) + 12px) 16px 10px;background:var(--bg)}
-main{padding:0 16px calc(env(safe-area-inset-bottom) + 120px);max-width:560px;margin:0 auto}
-button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
-input,select{font:inherit;font-size:17px;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;width:100%}
-input[type=color]{height:46px;padding:4px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+main{position:relative;z-index:1;padding-bottom:160px}
+header{position:sticky;top:0;z-index:2}
+.tabs{background:#12141b !important;backdrop-filter:none;-webkit-backdrop-filter:none;z-index:10;border-top:1px solid #262b36}
+.card{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.switch{position:relative;flex:none;width:46px;height:28px;border-radius:99px;background:var(--line)}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .15s}
+.switch[aria-pressed="true"]{background:var(--green)}
+.switch[aria-pressed="true"]::after{left:21px}
+/* Схема: все суммы в долларах, в формате «число $». Категория — значок в кружке. Тег принадлежит категории: выбирается при записи операции, создаётся в карточке категории. Отчёт: категория раскрывается и показывает свои теги; фильтр по тегам — отдельно. */
+:root{--bg:#06050a;--card:rgba(23,26,33,.86);--line:#262b36;--text:#eef1f6;--muted:#8a93a6;--green:#34c77b;--red:#ff6b6b;--accent:#6c8cff;--on-accent:#0f1115;--chip:#1f2430;color-scheme:dark}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f1115;--card:#171a21;--line:#262b36;--text:#eef1f6;--muted:#8a93a6;--green:#34c77b;--red:#ff6b6b;--accent:#6c8cff;--on-accent:#0f1115;--chip:#1f2430;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1115;--card:#171a21;--line:#262b36;--text:#eef1f6;--muted:#8a93a6;--green:#34c77b;--red:#ff6b6b;--accent:#6c8cff;--on-accent:#0f1115;--chip:#1f2430;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 -apple-system,system-ui,"SF Pro Text",sans-serif}
+body{padding-block:0 130px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:420px;margin:0 auto}
+button,input,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;padding:0;text-align:left}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px}
+header{display:flex;justify-content:flex-end;padding:10px 0 2px}
+.gear{font-size:22px;width:40px;height:40px;border-radius:12px;text-align:center}
+.gear[aria-current="page"]{background:var(--chip)}
+.periods{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--chip);padding:4px;border-radius:12px}
+.periods button{padding:8px 0;border-radius:9px;font-size:14px;color:var(--muted);font-weight:500;text-align:center}
+.periods button[aria-pressed="true"]{background:var(--card);color:var(--text);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.picker{margin:16px 0 14px;text-align:center}
+.picker-btn{display:inline-flex;align-items:center;gap:6px;font-size:22px;font-weight:600;padding:6px 10px;border-radius:10px}
+.picker-btn:hover{background:var(--chip)}
+.picker-btn small{font-size:14px;color:var(--accent);font-weight:500}
+.picker-static{font-size:22px;font-weight:600;padding:6px 10px}
+.chips{display:flex;gap:8px;overflow-x:auto;margin:0 0 10px;padding-bottom:2px}
+.chip{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);white-space:nowrap;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
 .card.list{padding:4px 14px}
-.balance{text-align:center}
-.balance b{font-size:32px;display:block}
+.center{text-align:center}
+small,.muted{color:var(--muted);font-size:13px;display:block}
+.balance b{font-size:32px;display:block;margin-top:4px;font-variant-numeric:tabular-nums}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .row2 .card{margin:0;text-align:center}
-small{color:var(--muted);font-size:13px;display:block}
+.row2 b{font-size:20px;font-variant-numeric:tabular-nums}
 .pos{color:var(--green)} .neg{color:var(--red)}
-.muted{color:var(--muted)} .center{text-align:center} .small{font-size:13px}
-.big{font-size:28px;display:block}
-h3{font-size:15px;color:var(--muted);margin:18px 4px 8px;font-weight:600}
-.mnav{display:flex;align-items:center;justify-content:space-between;margin:4px 0 12px}
-.mnav span{font-weight:600}
-.mnav button{font-size:28px;width:44px;height:36px}
-.chips{display:flex;gap:8px;overflow-x:auto;margin-bottom:10px;padding-bottom:2px}
-.chip{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);white-space:nowrap;font-size:14px}
-.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+h3{font-size:13px;color:var(--muted);margin:18px 4px 8px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.day{display:flex;justify-content:space-between;margin:14px 4px 6px;color:var(--muted);font-size:14px}
 .op{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 0;border-bottom:1px solid var(--line)}
 .op:last-child{border-bottom:0}
-.op-main{flex:1;display:flex;flex-direction:column;min-width:0}
+.op-main{flex:1;min-width:0;display:flex;flex-direction:column}
 .op-main b{font-weight:500}
-.op-sum{font-weight:600;white-space:nowrap}
-.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;flex:none}
-.dot.big{width:14px;height:14px;margin:0}
-.day{display:flex;justify-content:space-between;margin:14px 4px 6px;color:var(--muted);font-size:14px}
-.bar{margin:12px 0}
-.bar-top{display:flex;justify-content:space-between;font-size:15px;gap:8px}
-.bar-top span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.track{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:6px}
-.track div{height:100%;border-radius:99px}
-.btn{background:var(--accent);color:#fff;border-radius:12px;padding:10px 16px;font-weight:600}
+.op-sum{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right}
+.op-sum small{font-weight:400}
+.op-edit{color:var(--muted)}
+.ico{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.ico svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.ico.sm{width:20px;height:20px;margin-right:8px}
+.ico.sm svg{width:11px;height:11px;stroke-width:1.6}
+/* строка категории в отчёте: значок, название, %, сумма, стрелка */
+.crow{display:grid;grid-template-columns:30px minmax(0,1fr) 44px 96px 16px;gap:10px;align-items:center;width:100%;padding:9px 12px;font-variant-numeric:tabular-nums}
+.crow .pct{color:var(--muted);font-size:14px;text-align:right}
+.crow .sum{font-weight:600;text-align:right;white-space:nowrap}
+.crow .name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow .chev{color:var(--muted);font-size:12px;text-align:center}
+.crow .chev.open{color:var(--accent)}
+.crow-wrap{border:1px solid var(--line);background:var(--card);border-radius:14px;margin-bottom:8px;overflow:hidden}
+.crow-wrap .track{height:4px;margin:0 14px 10px;border-radius:99px;background:var(--line);overflow:hidden}
+.crow-wrap .track div{height:100%}
+.tagrows{background:var(--chip);padding:4px 14px 6px}
+.trow{display:grid;grid-template-columns:20px minmax(0,1fr) 96px;gap:8px;align-items:center;padding:9px 0;font-variant-numeric:tabular-nums;border-bottom:1px solid var(--line)}
+.trow:last-child{border-bottom:0}
+.trow .hash{color:var(--muted);font-size:17px;text-align:center}
+.trow .tname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trow .tsum{text-align:right;white-space:nowrap}
+.btn{background:var(--accent);color:var(--on-accent);border-radius:12px;padding:10px 16px;font-weight:600}
 .btn.ghost{background:none;color:var(--accent);font-weight:500;padding:10px 4px}
 .btn.danger{background:var(--red);color:#fff}
-.wide{display:block;width:100%;margin:10px 0;text-align:center;padding:14px}
-.field{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted);margin-bottom:12px}
-.sheet{position:fixed;inset:0;display:none;z-index:20}
-.sheet.open{display:block}
-.scrim{position:absolute;inset:0;background:rgba(0,0,0,.45)}
-.panel{position:absolute;left:0;right:0;bottom:0;max-height:90vh;overflow:auto;background:var(--card);border-radius:22px 22px 0 0;padding:14px 16px calc(env(safe-area-inset-bottom) + 16px)}
-.panel h2{font-size:18px;margin:0 0 10px}
-.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.tabs{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;align-items:center;background:var(--card);border-top:1px solid var(--line);padding:6px 0 calc(env(safe-area-inset-bottom) + 6px);z-index:10}
-.tabs button{display:flex;flex-direction:column;align-items:center;font-size:20px;flex:1}
-.tabs span{font-size:11px;color:var(--muted)}
-.tabs button.on span{color:var(--accent)}
-.tabs .fab{flex:0 0 56px;width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;font-size:30px;line-height:1;justify-content:center;margin-top:-18px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
-.gear{font-size:22px}
-.chart{width:100%;height:auto}
-.chart text{fill:var(--muted);font-size:11px}
+.btn.wide{display:block;width:100%;margin:10px 0;text-align:center;padding:14px}
 .legend{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center;justify-content:center;margin-top:8px}
 .legend i{width:10px;height:10px;border-radius:50%;display:inline-block;margin-left:10px}
+.chart{width:100%;height:auto}
+.chart text{fill:var(--muted);font-size:11px}
+.note{font-size:12px;color:var(--muted);text-align:center;margin:16px 0 0}
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;align-items:center;background:var(--card);border-top:1px solid var(--line);padding:6px max(8px,env(safe-area-inset-left,0px)) calc(env(safe-area-inset-bottom,0px) + 6px) max(8px,env(safe-area-inset-right,0px))}
+.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;font-size:20px;gap:2px;text-align:center}
+.tabs button small{font-size:11px}
+.tabs button[aria-current="page"] small{color:var(--accent)}
+.tabs .fab{flex:0 0 56px;width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:30px;line-height:1;justify-content:center;margin-top:-18px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;z-index:20}
+.sheet[hidden]{display:none}
+.panel{width:100%;max-height:90vh;overflow:auto;background:var(--card);border-radius:22px 22px 0 0;padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 18px)}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
+.sheet-head h2{font-size:18px;margin:0;text-align:center}
+.field{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted);margin-bottom:12px}
+.amt{display:grid;grid-template-columns:1fr auto;gap:8px}
+.amt select{width:112px}
+.hint{font-size:13px;color:var(--muted);margin:-4px 4px 12px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grid button{padding:14px 0;border-radius:12px;background:var(--chip);font-weight:500;text-align:center}
+.grid button[aria-current="true"]{background:var(--accent);color:var(--on-accent)}
+.nav{width:40px;height:36px;font-size:24px;border-radius:10px;background:var(--chip);text-align:center}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal .wd{font-size:12px;color:var(--muted);padding:4px 0}
+.cal button{padding:10px 0;border-radius:10px;text-align:center;font-variant-numeric:tabular-nums}
+.cal button[aria-current="true"]{background:var(--accent);color:var(--on-accent);font-weight:600}
+.icons{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.icons button{display:flex;justify-content:center;padding:8px 0;border-radius:14px;border:2px solid transparent}
+.icons button[aria-current="true"]{border-color:var(--accent)}
+.taglist{margin-bottom:12px}
+.taglist .trow{grid-template-columns:20px minmax(0,1fr) 28px}
+.taglist .del{color:var(--muted);font-size:16px;text-align:center}
+.addtag{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:12px}
+.addtag button{padding:0 16px;border-radius:12px;background:var(--accent);color:var(--on-accent);font-weight:600}
+.rate-row{display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.rate-row input{padding:8px 10px;text-align:right;font-variant-numeric:tabular-nums}
+.how{font-size:14px;margin:0;padding-left:18px}
+.how li{margin-bottom:8px}
+.err{color:var(--red);font-size:14px;min-height:18px;margin:0 0 8px}
+.donut-card{padding:18px 14px 14px;text-align:center}
+.donut{display:block;width:220px;max-width:100%;height:auto;margin:0 auto}
+.donut .dn-total{fill:var(--text);font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+.donut-card small{margin-top:10px}
+.donut .dn-name{fill:var(--muted);font-size:12px}
+.budget{margin:-4px 14px 10px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bbar{height:4px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:5px}
+.bbar div{height:100%;border-radius:99px}
+.brow{display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.brow input{padding:8px 10px;text-align:right;font-variant-numeric:tabular-nums}
+.switch{position:relative;flex:none;width:46px;height:28px;border-radius:99px;background:var(--line)}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .15s}
+.switch[aria-pressed="true"]{background:var(--green)}
+.switch[aria-pressed="true"]::after{left:21px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:110px;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;max-width:calc(100% - 32px);text-align:center;z-index:30}
+.toast[hidden]{display:none}
+.swatches{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-bottom:12px}
+.swatches button{aspect-ratio:1;border-radius:50%;border:0}
+.swatches button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--accent)}
+.cat-preview{display:flex;justify-content:center;margin:4px 0 12px}
+.ico.xs{width:16px;height:16px;box-shadow:none}
+.ico.xs svg{width:9px;height:9px;stroke-width:1.8}
+.trk{display:flex;align-items:center;margin:0 12px 9px}
+.crow-wrap .trk .track{flex:1;margin:0}
+.amt-big{position:relative;display:flex;justify-content:center;margin:10px 0 4px}
+.amt-big input{width:180px;text-align:center;font-size:40px;font-weight:600;background:none;border:0;border-bottom:2px solid var(--line);border-radius:0;padding:4px 0;font-variant-numeric:tabular-nums}
+.cur-pill{position:absolute;right:0;top:50%;transform:translateY(-50%);width:auto;padding:8px 14px;border-radius:999px;font-weight:600;color:var(--accent);background:var(--chip);border:0}
+.cats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 6px;margin:16px 0 14px}
+.cat-tile{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;font-size:12px;line-height:1.2;padding:2px}
+.cat-tile .ico.lg{width:50px;height:50px;transition:box-shadow .15s}
+.cat-tile[aria-pressed="true"] .ico.lg{box-shadow:0 0 0 3px var(--card),0 0 0 5px var(--accent)}
+.ico.lg svg{width:22px;height:22px;stroke-width:1.5}
+.daterow{position:relative;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:14px;background:var(--chip);font-weight:600;font-size:16px;margin-bottom:12px;cursor:pointer}
+.daterow input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;padding:0;border:0}
+.rcal{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+.rcal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:600}
+.rcal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.rcal-grid .wd{font-size:11px;color:var(--muted);padding-bottom:4px}
+.rcal-grid button{min-height:48px;border-radius:10px;padding:4px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-variant-numeric:tabular-nums}
+.rcal-grid button[aria-current="true"]{background:var(--accent);color:var(--on-accent)}
+.rcal-grid .dnum{font-size:14px}
+.rcal-grid em{font-style:normal;font-size:10.5px;line-height:1.1}
+.rcal-grid em.neg{color:var(--red)}
+.rcal-grid em.pos{color:var(--green)}
+.rcal-grid button[aria-current="true"] em{color:var(--on-accent)}
+.tagfgroup{font-size:13px;color:var(--muted);margin:12px 0 6px}
+.photos{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.photos:empty{display:none}
+.photos>div{position:relative;aspect-ratio:1;border-radius:10px;background:var(--chip) center/cover no-repeat}
+.photos button{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:11px;line-height:22px;text-align:center}
 </style>
 </head>
 <body>
-<header>
-  <button class="gear" data-act="tab" data-v="settings" aria-label="Настройки">⚙️</button>
-</header>
+<canvas id="bg" aria-hidden="true"></canvas>
+<div class="wrap">
+  <header>
+    <button class="gear" data-act="tab" data-v="settings" aria-label="Настройки" id="gear">⚙️</button>
+  </header>
 
-<main id="view"></main>
+  <main id="view"></main>
 
-<nav class="tabs">
-  <button data-act="tab" data-v="home"><span>🏠</span><span>Главная</span></button>
-  <button data-act="tab" data-v="ops"><span>📋</span><span>Операции</span></button>
+  <p class="note">Макет на примерах. Данные выдуманные, курсы примерные: введите свои в «Настройки → Валюты и курсы».</p>
+</div>
+
+<nav class="tabs" aria-label="Разделы">
+  <button data-act="tab" data-v="home"><span>🏠</span><small>Главная</small></button>
+  <button data-act="tab" data-v="ops"><span>📋</span><small>Операции</small></button>
   <button class="fab" data-act="addOp" aria-label="Добавить операцию">+</button>
-  <button data-act="tab" data-v="reports"><span>📊</span><span>Отчёты</span></button>
-  <button data-act="tab" data-v="cats"><span>🏷️</span><span>Категории</span></button>
+  <button data-act="tab" data-v="reports"><span>📊</span><small>Отчёты</small></button>
+  <button data-act="tab" data-v="cats"><span>🏷️</span><small>Категории</small></button>
 </nav>
 
-<div id="sheet" class="sheet">
-  <div class="scrim" data-act="closeSheet"></div>
+<div class="sheet" id="sheet" hidden>
   <div class="panel" id="sheet-body"></div>
 </div>
 
 <script>
-const KEY = 'finance-app-v1';
-const $ = s => document.querySelector(s);
-const view = $('#view');
+const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const pad = n => String(n).padStart(2,'0');
+const fmtNum = n => new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2,minimumFractionDigits:2}).format(n);
+const usd = n => fmtNum(n) + ' $';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = iso => iso.split('-').reverse().join('.');
 
-const DEFAULT_CATS = [
-  {id:'e1', name:'Продукты', color:'#34c77b', type:'expense'},
-  {id:'e2', name:'Кафе и доставка', color:'#ff9f43', type:'expense'},
-  {id:'e3', name:'Транспорт', color:'#4da6ff', type:'expense'},
-  {id:'e4', name:'Жильё и коммуналка', color:'#a77bff', type:'expense'},
-  {id:'e5', name:'Связь и интернет', color:'#ffd166', type:'expense'},
-  {id:'e6', name:'Здоровье', color:'#ff6b9a', type:'expense'},
-  {id:'e7', name:'Хобби', color:'#26c6da', type:'expense'},
-  {id:'e8', name:'Прочее', color:'#8a93a6', type:'expense'},
-  {id:'i1', name:'Зарплата', color:'#34c77b', type:'income'},
-  {id:'i2', name:'Подработка', color:'#4da6ff', type:'income'},
-  {id:'i3', name:'Прочее', color:'#8a93a6', type:'income'}
+/* ---------- Значки категорий ---------- */
+const ICON_COLOR = {
+  basket:'#7fae52', health:'#e0484c', gift:'#d0628f', building:'#c95c8c', hygiene:'#9db38f',
+  bus:'#4a72c4', croissant:'#e0483e', phone:'#4a7fd0', other:'#8a8a8a', wallet:'#5fb8a6', briefcase:'#e0a83a',
+  cup:'#e0a83a', apple:'#e0a83a', pizza:'#e0a83a',
+  fuel:'#4a72c4', taxi:'#4a72c4', train:'#4a72c4', plane:'#4a72c4',
+  film:'#a77bff', music:'#a77bff', game:'#a77bff', ticket:'#a77bff',
+  key:'#c9875a', sofa:'#c9875a', bed:'#c9875a', bulb:'#c9875a', pet:'#c9875a',
+  pill:'#e0484c', tooth:'#e0484c',
+  bag:'#5fb8a6', shirt:'#5fb8a6', bank:'#5fb8a6', card:'#5fb8a6', piggy:'#5fb8a6',
+  book:'#4a7fd0', cap:'#4a7fd0',
+  dumbbell:'#7fae52', ball:'#7fae52',
+  wifi:'#26c6da', bolt:'#26c6da'
+};
+const ICON_SVG = {
+  basket:'<path d="M3.5 10h17l-1.8 9H5.3z"/><path d="M8 10l4-5.5 4 5.5"/><path d="M9.5 14v2.5M12 14v2.5M14.5 14v2.5"/>',
+  health:'<path d="M12 19.5C12 19.5 4 14.8 4 9.5 4 7 6 5.2 8.2 5.2c1.6 0 3 .9 3.8 2.3.8-1.4 2.2-2.3 3.8-2.3C18 5.2 20 7 20 9.5c0 5.3-8 10-8 10z"/><path d="M7 12.5h2.5l1.5-2.5 2 4.5 1.5-2H17"/>',
+  gift:'<rect x="4" y="9" width="16" height="4" rx="1"/><path d="M5.5 13v6.5a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V13"/><path d="M12 9v11"/><path d="M12 9c-1.5-3-4.5-3.2-4.5-1.2 0 1.2 2.2 1.2 4.5 1.2zM12 9c1.5-3 4.5-3.2 4.5-1.2 0 1.2-2.2 1.2-4.5 1.2z"/>',
+  building:'<rect x="5.5" y="4" width="13" height="16" rx="1"/><path d="M9 8h1.5M13.5 8H15M9 12h1.5M13.5 12H15M11 20v-2.5h2V20"/>',
+  hygiene:'<rect x="4.5" y="10" width="6.5" height="10" rx="1.5"/><path d="M6 10V7.5h3.5V10"/><rect x="13" y="5" width="6.5" height="15" rx="1.5"/><path d="M13 9h6.5"/>',
+  bus:'<rect x="5" y="4" width="14" height="14" rx="3"/><path d="M5 11h14"/><path d="M8 18v2.5M16 18v2.5"/><path d="M9 14.5h.01M15 14.5h.01"/>',
+  croissant:'<path d="M4 15c0-3 2-5.5 4.5-6.5.9 1.8 2.3 2.8 3.5 2.8s2.6-1 3.5-2.8C18 9.5 20 12 20 15c-1.2.9-2.6 1.4-4 1.4-.9-.8-2.1-1.2-4-1.2s-3.1.4-4 1.2C6.6 16.4 5.2 15.9 4 15z"/>',
+  phone:'<path d="M6.6 3.5h2.4l1.4 3.6-1.8 1.4a11 11 0 0 0 5.4 5.4l1.4-1.8 3.6 1.4v2.4a2 2 0 0 1-2.2 2A16 16 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z"/><path d="M15 5.5a5 5 0 0 1 4 4M14.5 2.5a8.5 8.5 0 0 1 7 7"/>',
+  other:'<circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.4"/><path d="M12 17h.01"/>',
+  wallet:'<rect x="3.5" y="6.5" width="17" height="13" rx="2.5"/><path d="M3.5 10h17"/><path d="M16 14.5h2"/>',
+  briefcase:'<rect x="3.5" y="7" width="17" height="12.5" rx="2"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7"/><path d="M3.5 12.5h17"/>',
+  cup:'<path d="M5 9h11v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/><path d="M16 10.5h1.5a2 2 0 0 1 0 4H16"/><path d="M8.5 3.5v2M11.5 3.5v2"/>',
+  apple:'<path d="M12 8c-2-1.2-5-.8-5.5 2.8C6 14.5 7.8 19.5 9.5 19.5c1 0 1.5-.6 2.5-.6s1.5.6 2.5.6c1.7 0 3.5-5 2.9-8.7C16.9 7.2 14 6.8 12 8z"/><path d="M12 8c0-2 .5-3.5 2-4.5"/>',
+  pizza:'<path d="M3.5 5.5h17L12 20z"/><path d="M7.5 9.5h.01M11.5 8.5h.01M10.5 13.5h.01"/>',
+  fuel:'<rect x="5" y="4" width="10" height="16" rx="1.5"/><path d="M5 9h10M15 8l3 2.5V18a1.5 1.5 0 0 1-3 0"/>',
+  taxi:'<path d="M4 15v-3l2-4.5h12L20 12v3z"/><path d="M7 18v1.5M17 18v1.5M8 9.5h8"/>',
+  train:'<rect x="6" y="3.5" width="12" height="13" rx="3"/><path d="M6 11h12M9 19l-2 2M15 19l2 2M9 16.5h.01M15 16.5h.01"/>',
+  plane:'<path d="M3 11.5 21 4l-4 16-5-5.5-3.5 2.5.5-4.5z"/>',
+  film:'<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M7.5 5v14M16.5 5v14M3.5 9.5h4M3.5 14.5h4M16.5 9.5h4M16.5 14.5h4"/>',
+  music:'<path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/>',
+  game:'<rect x="3" y="8" width="18" height="10" rx="5"/><path d="M7.5 13h3M9 11.5v3M15.5 12.5h.01M17.5 14h.01"/>',
+  ticket:'<path d="M3.5 8.5a2 2 0 0 0 0 4v3.5h17V12.5a2 2 0 0 0 0-4V5h-17z"/><path d="M14 5v2M14 11v2M14 16.5v.01"/>',
+  key:'<circle cx="8" cy="12" r="4"/><path d="M12 12h9M18 12v3M21 12v2"/>',
+  sofa:'<path d="M5 11V8.5a2.5 2.5 0 0 1 2.5-2.5h9A2.5 2.5 0 0 1 19 8.5V11"/><path d="M3 13.5a2 2 0 0 1 4 0V15h10v-1.5a2 2 0 0 1 4 0V18H3z"/><path d="M5 18v2M19 18v2"/>',
+  bed:'<path d="M3 18v-8M21 18v-4a3 3 0 0 0-3-3h-7v7M3 14h18M3 18h18"/><circle cx="7" cy="11.5" r="1.8"/>',
+  bulb:'<path d="M9 17h6M10 20.5h4"/><path d="M12 3.5a5.5 5.5 0 0 0-3.5 9.8c.6.5 1 1.2 1 2V16h5v-.7c0-.8.4-1.5 1-2A5.5 5.5 0 0 0 12 3.5z"/>',
+  pill:'<path d="m8.5 4 11.5 11.5a3.5 3.5 0 0 1-5 5L3.5 9a3.5 3.5 0 0 1 5-5z"/><path d="m8.5 9.5 6 6"/>',
+  tooth:'<path d="M7 4.5c2-1.2 3.4 0 5 0s3-1.2 5 0c1.8 1.1 1.6 4 1.2 6.2-.4 2.2-.8 4.8-1.8 7.3-.5 1.3-2.3 1.2-2.7-.3L13 14.5h-2l-.7 3.2c-.4 1.5-2.2 1.6-2.7.3-1-2.5-1.4-5.1-1.8-7.3C5.4 8.5 5.2 5.6 7 4.5z"/>',
+  bag:'<path d="M5 8.5h14l-1 11.5H6z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/>',
+  shirt:'<path d="M8.5 4 4 6.5 2.5 11 5.5 12v8h13v-8l3-1-1.5-4.5L15.5 4a3.5 3.5 0 0 1-7 0z"/>',
+  book:'<path d="M4 5.5C6 4.5 8.5 4.5 12 6.5c3.5-2 6-2 8-1v13c-2-1-4.5-1-8 1-3.5-2-6-2-8-1z"/><path d="M12 6.5v13"/>',
+  cap:'<path d="M2.5 9.5 12 5l9.5 4.5L12 14z"/><path d="M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5"/><path d="M21.5 9.5V15"/>',
+  pet:'<circle cx="6" cy="10" r="1.8"/><circle cx="10" cy="6.5" r="1.8"/><circle cx="14" cy="6.5" r="1.8"/><circle cx="18" cy="10" r="1.8"/><path d="M12 12.5c-2.8 0-5.5 3.5-5.5 5.5 0 1.4 1.2 2 2.5 2 1.3-.6 2-.8 3-.8s1.7.2 3 .8c1.3 0 2.5-.6 2.5-2 0-2-2.7-5.5-5.5-5.5z"/>',
+  dumbbell:'<path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
+  ball:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5 15.5 10l-1.3 4.2h-4.4L8.5 10z"/><path d="M12 7.5V3.5M15.5 10l4-1.2M14.2 14.2l2.3 3.6M9.8 14.2l-2.3 3.6M8.5 10 4.5 8.8"/>',
+  wifi:'<path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.8 16a5 5 0 0 1 6.4 0"/><circle cx="12" cy="19.5" r="1"/>',
+  bolt:'<path d="M13 2.5 4.5 13.5H11L10 21.5l8.5-11H12.5z"/>',
+  bank:'<path d="M3 9.5 12 4l9 5.5M4.5 9.5V18M9.5 9.5V18M14.5 9.5V18M19.5 9.5V18M3 20h18"/>',
+  card:'<rect x="3" y="6" width="18" height="12.5" rx="2.5"/><path d="M3 10.5h18M6.5 15.5h4"/>',
+  piggy:'<path d="M5 11.5a7 6.5 0 0 1 12.5-3h1.5v3.5l1.5 1v2h-2.2A6.5 6.5 0 0 1 14 19H12.5v-2h-3v2H7.5v-2.5A6.5 6.5 0 0 1 5 11.5z"/><circle cx="15" cy="10.5" r=".8"/><path d="M9.5 8.5h3"/>'
+};
+const ICON_GROUPS = [
+  {title:'Ваши значки', keys:['basket','health','gift','building','hygiene','bus','croissant','phone','other','wallet','briefcase']},
+  {title:'Еда и напитки', keys:['cup','apple','pizza']},
+  {title:'Транспорт', keys:['fuel','taxi','train','plane']},
+  {title:'Развлечения', keys:['film','music','game','ticket']},
+  {title:'Дом', keys:['key','sofa','bed','bulb']},
+  {title:'Здоровье', keys:['pill','tooth']},
+  {title:'Покупки', keys:['bag','shirt']},
+  {title:'Образование', keys:['book','cap']},
+  {title:'Семья и питомцы', keys:['pet']},
+  {title:'Спорт', keys:['dumbbell','ball']},
+  {title:'Счета', keys:['wifi','bolt']},
+  {title:'Финансы', keys:['bank','card','piggy']}
+];
+const ICON_KEYS = Object.keys(ICON_SVG);
+
+/* Полный каталог значков по группам (нарисован по скриншотам Андрея, в упрощённом виде) */
+function addGroup(title, color, icons, reuse = []){
+  Object.entries(icons).forEach(([k, svg]) => { ICON_COLOR[k] = color; ICON_SVG[k] = svg; });
+  ICON_GROUPS.push({title, keys: [...reuse, ...Object.keys(icons)]});
+}
+ICON_GROUPS.length = 0;
+ICON_GROUPS.push({title:'Ваши значки', keys:['basket','health','gift','building','hygiene','bus','croissant','phone','other','wallet','briefcase']});
+addGroup('Образование', '#4a7fd0', {
+  bell:'<path d="M5 15a7 7 0 0 1 14 0v1.5H5z"/><path d="M12 4v2.5M3.5 19h17"/>',
+  diploma:'<rect x="3" y="6" width="18" height="12" rx="1.5"/><circle cx="15" cy="12" r="2"/><path d="M7 10h4M7 13h4"/>',
+  monitor:'<rect x="3" y="4.5" width="18" height="12" rx="1.5"/><path d="M9 20h6M12 16.5V20"/>',
+  medal:'<circle cx="12" cy="14" r="5"/><path d="M9 4h3l1 4h-2zM15 4h-3l-1 4h2z"/>',
+  rosette:'<circle cx="12" cy="9" r="5"/><path d="M9 13.5 7.5 21l4.5-2 4.5 2-1.5-7.5"/>',
+  board:'<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4M7 10h3l1-3 1 5 1-2h2"/>',
+  school:'<path d="M3 10 12 4l9 6v10H3z"/><path d="M9 20v-5h6v5M12 4v-2"/>',
+  ruler:'<path d="M4 20 20 4M4 20h16v-4"/><path d="M8 16l2 2M11 13l2 2M14 10l2 2"/>',
+  school2:'<path d="M5 20V9l7-5 7 5v11z"/><path d="M9 20v-4h6v4M9 12h2M13 12h2"/>'
+}, ['book','cap']);
+addGroup('Семья и дети', '#e0a83a', {
+  baby:'<path d="M7 9a5 5 0 0 1 10 0v10H7z"/><circle cx="12" cy="10" r="1.2"/><path d="M10 15.5h4"/>',
+  babyface:'<circle cx="12" cy="12" r="7"/><path d="M9 11h.01M15 11h.01M9.5 15c1.5 1.2 3.5 1.2 5 0"/>',
+  cat:'<path d="M5 20V10l2-5 3 2h4l3-2 2 5v10z"/><path d="M9.5 13.5h.01M14.5 13.5h.01M10.5 16.5c1 .8 2 .8 3 0"/>',
+  kids:'<circle cx="9" cy="7.5" r="2.5"/><circle cx="16" cy="9" r="2"/><path d="M4 20v-5a5 5 0 0 1 10 0v5M14 20v-3.5a3 3 0 0 1 6 0V20"/>',
+  parents:'<circle cx="8" cy="6.5" r="2.5"/><circle cx="16" cy="6.5" r="2.5"/><path d="M4.5 20v-6a3.5 3.5 0 0 1 7 0v6M12.5 20v-6a3.5 3.5 0 0 1 7 0v6"/>',
+  family:'<circle cx="12" cy="5" r="2"/><path d="M8 20v-7a4 4 0 0 1 8 0v7M10 13h4"/>',
+  girl:'<circle cx="12" cy="11" r="6.5"/><path d="M6 8c0-3 3-4 6-4s6 1 6 4M9.5 14c1.5 1 3.5 1 5 0"/>',
+  nursery:'<path d="M4 20V11l8-6 8 6v9z"/><path d="M10 20v-4h4v4"/>',
+  abc:'<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>',
+  stroller:'<path d="M4 9h12v3a4 4 0 0 1-4 4H9a5 5 0 0 1-5-5z"/><path d="M16 9l3-4M7 16v3M14 16v3M4 21h13"/>',
+  hummingbird:'<path d="M3 9c4-1 7 1 9 4l6-4-3 7c-2 2-5 2-7 0z"/><path d="M11 13l-4 6"/>',
+  parrot:'<path d="M6 19c5-1 9-5 10-14 2 3 1 8-1 11-2 3-6 4-9 3z"/><path d="M7 8c2 0 4 1 5 3"/>',
+  spider:'<circle cx="12" cy="13" r="3.5"/><circle cx="12" cy="7.5" r="2"/><path d="M8.5 11 4 8M8.5 14 4 16M15.5 11l4.5-3M15.5 14l4.5 2M9 16l-4 4M15 16l4 4"/>',
+  mouse:'<path d="M4 15c0-4 3-6 7-6s7 2 7 5-2 4-4 4H9c-3 0-5-1-5-3z"/><circle cx="8" cy="10" r=".8"/>',
+  diaper:'<path d="M4 6h16v6c0 4-3 7-8 7s-8-3-8-7z"/><path d="M4 6l4 3 4-3 4 3 4-3"/>',
+  petbowl:'<path d="M4 13h16l-2 6H6z"/><path d="M8 10c0-2 2-3 4-3s4 1 4 3"/>',
+  vet:'<circle cx="7" cy="9" r="1.8"/><circle cx="10.5" cy="5.5" r="1.8"/><circle cx="14" cy="5.5" r="1.8"/><circle cx="17" cy="9" r="1.8"/><path d="M12 12c-3 0-5.5 3.5-5.5 6 0 1.5 1.2 2 2.5 2h6c1.3 0 2.5-.5 2.5-2 0-2.5-2.5-6-5.5-6z"/>',
+  toycar:'<path d="M4 15h16v3H4z"/><path d="M6 15l2-4h8l2 4M8 18v1.5M16 18v1.5"/>',
+  playground:'<path d="M4 20v-9l4-4h4v13M10 11h9l-3 9"/><path d="M4 14h6M4 20h16"/>',
+  kindergarten:'<path d="M4 20v-9h16v9M4 11l8-6 8 6M9 20v-4h6v4"/>',
+  allowance:'<rect x="3" y="7" width="18" height="11" rx="2"/><path d="M7 7V5h10v2M12 11v4M10 12.5h4"/>',
+  bug:'<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M10.5 7.5v6M8 9.5l-2-1.5M13 9.5l2-1.5"/>',
+  teddy:'<circle cx="12" cy="8" r="4"/><circle cx="8" cy="4.5" r="1.5"/><circle cx="16" cy="4.5" r="1.5"/><path d="M8 13h8l1 7H7z"/>'
+}, ['pet']);
+addGroup('Спорт', '#7fae52', {
+  basketball:'<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5v17M6 6c3 3 3 9 0 12M18 6c-3 3-3 9 0 12"/>',
+  bicycle:'<circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l4-7h6l2 7M10 9l3 7h-6M14 5h2"/>',
+  trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1.5A3 3 0 0 0 8 10M16 6h3v1.5A3 3 0 0 1 16 10M12 13v4M8 20h8"/>',
+  dancer:'<circle cx="12" cy="6" r="2"/><path d="M12 9v6l-3 5M12 15l3 5M9 11l-3-3M15 11l3-3"/>',
+  horseshoe:'<path d="M5 5v7a7 7 0 0 0 14 0V5M5 8h3M16 8h3"/>',
+  kayak:'<path d="M3 13c4-5 14-5 18 0-4 4-14 4-18 0z"/><path d="M4 12l16-6"/>',
+  parachute:'<path d="M3 11a9 9 0 0 1 18 0c-3 0-6 1-9 4-3-3-6-4-9-4z"/><path d="M7 13l3 6M17 13l-3 6M12 15v5"/>',
+  runner:'<circle cx="15" cy="5" r="2"/><path d="M10 21l2-6-3-3 2-4 4 1 3 3M12 12l-4-1M6 11h2"/>',
+  windsurf:'<path d="M8 3l4 16M8 3c5 2 8 8 6 13"/><path d="M3 20h18"/>',
+  ski:'<path d="M4 18 19 6M6 21l13-10"/><circle cx="16" cy="5" r="2"/>',
+  goggles:'<path d="M3 10h18M5 10v3a4 4 0 0 0 4 4 3 3 0 0 0 3-2 3 3 0 0 0 3 2 4 4 0 0 0 4-4v-3"/>',
+  muscle:'<path d="M4 16c3-2 4-6 4-9l3 2c2 1 4 0 6-2 1 3 0 9-3 12-3 2-7 1-10-3z"/>',
+  shaker:'<path d="M7 7h10l-1 13H8z"/><path d="M6 7h12M9 4h6v3H9z"/>',
+  swimmer:'<circle cx="16" cy="8" r="2"/><path d="M3 15c2 0 2-1.5 4-1.5S9 15 11 15s2-1.5 4-1.5 2 1.5 4 1.5M5 12l5-2 3 2"/>',
+  kettlebell:'<path d="M8 10a4 4 0 0 1 8 0"/><path d="M6 10h12c1 0 1.5 1 1.5 2v4c0 2-2 4-4 4H8.5c-2 0-4-2-4-4v-4c0-1 .5-2 1.5-2z"/>',
+  whistle:'<path d="M4 13h10a4 4 0 0 0 4-4V7M8 13v4M18 9h2"/><circle cx="6" cy="16" r="2"/>',
+  yoga:'<circle cx="12" cy="6" r="2"/><path d="M8 20l4-8 4 8M6 16h12"/>',
+  tennis:'<circle cx="15" cy="9" r="5"/><path d="M11.5 12.5 4 20"/>',
+  skates:'<path d="M5 6h8l2 9H4z"/><circle cx="7" cy="18" r="1.5"/><circle cx="12" cy="18" r="1.5"/>'
+}, ['dumbbell','ball']);
+addGroup('Отдых', '#26c6da', {
+  sail:'<path d="M12 3v15M12 4l6 12h-6M12 8l-5 9h5"/><path d="M4 19c2 1 4 1 6 0s4-1 6 0 3 1 4 0"/>',
+  campfire:'<path d="M12 4c2 3 3 4 2 7 2-1 2-3 2-3 1 2 1 5-4 8-5-3-4-6-3-8 0 0 1 2 2 2-1-3 1-5 1-6z"/><path d="M5 19l14-4M5 15l14 4"/>',
+  tent:'<path d="M3 20 12 5l9 15zM12 5v15M9 20l3-5 3 5"/>',
+  hotel:'<rect x="5" y="3.5" width="12" height="17" rx="1"/><path d="M9 7.5h.01M13 7.5h.01M9 11.5h.01M13 11.5h.01M9 15.5h.01M13 15.5h.01M17 9h3v8h-3"/>',
+  mountain:'<path d="M3 19l6-9 4 5 2-3 6 7z"/><circle cx="17" cy="6" r="2"/>',
+  beach:'<circle cx="12" cy="14" r="4"/><path d="M4 19h16M12 4v2M5 7l1.5 1.5M19 7l-1.5 1.5"/>',
+  flipflops:'<path d="M7 4c-2 0-3 5-2 9s2 6 3 6 2-3 2-6-1-9-3-9zM17 4c2 0 3 5 2 9s-2 6-3 6-2-3-2-6 1-9 3-9z"/>',
+  luggage:'<rect x="6" y="6" width="12" height="15" rx="2"/><path d="M10 6V4h4v2M9 10v8M12 10v8M15 10v8"/>',
+  bikini:'<path d="M5 5c2 3 4 3 4 3s-2-1-4-3zM19 5c-2 3-4 3-4 3s2-1 4-3zM7 9h10c0 4-2 6-3 7l-2-3-2 3c-1-1-3-3-3-7z"/>',
+  picnic:'<path d="M5 9h14l-2 11H7z"/><path d="M5 9l3-5M19 9l-3-5M8 9v11M16 9v11"/>',
+  tickets:'<path d="M4 8a2 2 0 0 0 0 4v4h16v-4a2 2 0 0 0 0-4V5H4z"/><path d="M9 5v2M9 11v2"/>',
+  pass:'<rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 11h4M7 14h6M15 11h2"/>',
+  pine:'<path d="M12 3l4 5h-2l4 5h-3l4 5H5l4-5H6l4-5h-2z"/><path d="M12 18v3"/>'
+});
+addGroup('Еда и напитки', '#d9943a', {
+  beer:'<path d="M5 8h10v11H5zM15 10h2.5a2.5 2.5 0 0 1 0 5H15"/><path d="M5 8c1-2 2-2 3-1 1-1 2-1 3 0 1-1 2-1 3 1"/>',
+  burger:'<path d="M4 11h16c0-4-3.5-7-8-7s-8 3-8 7z"/><path d="M4 14h16M5 17h14c0 1.5-1 2.5-2 2.5H7C6 19.5 5 18.5 5 17z"/>',
+  cheese:'<path d="M3 9l18-4v11l-18 4z"/><circle cx="12" cy="13" r="1.2"/><circle cx="16" cy="11" r=".8"/>',
+  beans:'<ellipse cx="9" cy="13" rx="4" ry="6" transform="rotate(20 9 13)"/><path d="M9 7c1 3 1 9 0 12"/><circle cx="17" cy="7" r="2.5"/>',
+  fish:'<path d="M3 12c3-4 9-5 13-1l3-3v8l-3-3c-4 4-10 3-13-1z"/><circle cx="8" cy="11" r=".8"/>',
+  honey:'<path d="M6 4l4 2v4l-4 2-4-2V6zM14 8l4 2v4l-4 2-4-2v-4zM10 14l4 2v4"/>',
+  icecream:'<path d="M8 12h8l-4 9z"/><circle cx="9" cy="9" r="3"/><circle cx="15" cy="9" r="3"/>',
+  meat:'<path d="M6 13c-3-1-3-6 1-7 3-1 5 1 6 4 1 4 4 3 6 5 1 4-4 6-8 3-3-2-4-4-5-5z"/>',
+  cracker:'<rect x="5" y="5" width="14" height="14" rx="2"/><circle cx="9" cy="9" r=".8"/><circle cx="15" cy="9" r=".8"/><circle cx="9" cy="15" r=".8"/><circle cx="15" cy="15" r=".8"/>',
+  cupcake:'<path d="M6 13h12l-2 7H8z"/><path d="M6 13c0-4 3-6 6-6s6 2 6 6M10 8c0-2 1-3 2-3s2 1 2 3"/>',
+  carrot:'<path d="M8 12 16 20c1 1 3 0 3-1L11 11z"/><path d="M14 8l2-4M16 9l3-2M11 6l2-3"/>',
+  water:'<path d="M9 3h6v3l1.5 2.5V20a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1V8.5L9 6z"/><path d="M8 13h8"/>',
+  wine:'<path d="M8 3h8l-1 7a3 3 0 0 1-6 0zM12 13v7M9 21h6"/>',
+  teacup:'<path d="M5 10h12v4a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5zM17 11h1.5a2 2 0 0 1 0 4H17M9 3c0 2 2 2 2 4M13 3c0 2 2 2 2 4"/>',
+  egg:'<path d="M12 4c3 0 5 5 5 9a5 5 0 0 1-10 0c0-4 2-9 5-9z"/><path d="M7 20h10"/>',
+  wheat:'<path d="M12 21V8M12 8c-2-1-3-3-3-5 2 1 3 3 3 5zM12 8c2-1 3-3 3-5-2 1-3 3-3 5zM12 13c-2-1-3-3-3-5 2 1 3 3 3 5zM12 13c2-1 3-3 3-5-2 1-3 3-3 5z"/>',
+  milk:'<path d="M7 8l2-4h6l2 4v12H7z"/><path d="M7 12h10M10 12v4"/>',
+  pepper:'<rect x="9" y="4" width="6" height="8" rx="2"/><path d="M12 12v8M9 20h6"/>',
+  bread:'<path d="M5 11a7 7 0 0 1 14 0v8H5z"/><path d="M9 11v8M15 11v8"/>',
+  can:'<rect x="6" y="3.5" width="12" height="17" rx="3"/><path d="M6 7h12M6 17h12"/>'
+}, ['croissant','cup','apple','pizza']);
+addGroup('Дом', '#c9875a', {
+  ac:'<rect x="3" y="5" width="18" height="6" rx="1.5"/><path d="M6 14c0 1-1 2-1 3M10 14c0 1-1 2-1 3M14 14c0 1-1 2-1 3"/>',
+  paint:'<path d="M5 19l10-10 3 3-10 10H5z"/><path d="M14 8l2-4 4 4-2 2"/>',
+  house2:'<path d="M3 11l9-7 9 7v9H3z"/><path d="M9 20v-5h6v5"/>',
+  officechair:'<path d="M7 4h10a4 4 0 0 1 0 8H7z"/><path d="M12 12v4M7 20h10M9 16h6"/>',
+  scales:'<path d="M12 4v16M7 20h10M5 8h14M5 8l-2.5 5h5zM19 8l-2.5 5h5z"/>',
+  buildings:'<rect x="4" y="8" width="7" height="12"/><rect x="11" y="4" width="9" height="16"/><path d="M7 12h.01M7 16h.01M14 8h.01M14 12h.01M14 16h.01"/>',
+  spray:'<path d="M9 9h6v11H9zM10 9V6l2-2h2l1 2v3"/><path d="M4 4h2M4 7h2M4 10h2"/>',
+  broom:'<path d="M14 4l6 6-3 3-6-6zM10 9l-6 11M9 13l4 4"/>',
+  hanger:'<path d="M12 6V4a2 2 0 0 1 4 0M12 6L4 12h16z"/>',
+  tv:'<rect x="3" y="5" width="18" height="12" rx="1.5"/><path d="M9 20h6M12 17v3"/>',
+  plant:'<path d="M8 20h8M12 20v-7M12 13c-3 0-5-2-5-5 3 0 5 2 5 5zM12 11c3 0 5-2 5-5-3 0-5 2-5 5z"/>',
+  frame:'<rect x="3.5" y="4.5" width="17" height="15" rx="1"/><path d="M6 17l4-5 3 3 2-2 3 4"/>',
+  pot:'<path d="M5 11h14v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M5 11a7 7 0 0 1 14 0M9 5h6"/>',
+  hammer:'<path d="M14 6l4 4-8 8-4-4z"/><path d="M9 11l-5 5"/>',
+  toilet:'<path d="M6 4h6v7H6zM5 11h10v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/>',
+  tile:'<rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 12h16M12 4v16"/>',
+  wardrobe:'<rect x="5" y="3.5" width="14" height="17" rx="1"/><path d="M12 3.5v17M9.5 12h.01M14.5 12h.01"/>',
+  dresser:'<rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 9.5h16M4 14.5h16M10 6.5h4M10 12h4M10 17h4"/>',
+  chair:'<path d="M7 4h10v8H7zM5 12h14M7 12v8M17 12v8"/>',
+  table:'<path d="M3 7h18M5 7v13M19 7v13M7 10v3M17 10v3"/>',
+  armchair:'<path d="M6 11V7a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v4"/><path d="M4 12a2 2 0 0 1 4 0v3h8v-3a2 2 0 0 1 4 0v5H4z"/>',
+  towels:'<rect x="5" y="4" width="14" height="5" rx="1"/><rect x="5" y="9.5" width="14" height="5" rx="1"/><rect x="5" y="15" width="14" height="5" rx="1"/>',
+  drill:'<path d="M4 9h11l-1-4H6zM15 9h4M10 13v4M7 9v4h6v-4"/>'
+}, ['key','sofa','bed','bulb']);
+addGroup('Покупки', '#5fb8a6', {
+  cart:'<path d="M3 4h2.5l2 11h10l2-8H7"/><circle cx="9" cy="19" r="1.5"/><circle cx="16" cy="19" r="1.5"/>',
+  camera:'<rect x="3" y="7" width="18" height="12" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M8 7l1.5-2.5h5L16 7"/>',
+  delivery:'<path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.5"/><circle cx="17" cy="18" r="1.5"/>',
+  dress:'<path d="M9 3h6l1 4-3 1 4 13H7l4-13-3-1z"/>',
+  tulip:'<path d="M8 5c0 4 2 6 4 6s4-2 4-6c-1 2-3 2-4 0-1 2-3 2-4 0zM12 11v10"/>',
+  store:'<path d="M4 9h16l-1-5H5zM5 9v11h14V9M9 20v-6h6v6"/>',
+  phone2:'<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/>',
+  laptop:'<rect x="4" y="5" width="16" height="11" rx="1"/><path d="M2 19h20"/>',
+  ring:'<circle cx="12" cy="14" r="6"/><path d="M9 8l3-4 3 4z"/>',
+  tag:'<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.2"/>',
+  heel:'<path d="M4 14c3 0 5-2 8-5l3 1v5H4z"/><path d="M15 10v10"/>',
+  sneaker:'<path d="M3 16h18v2H3zM3 16c2-4 6-5 9-5l3 2 5 1v2"/>',
+  toothbrush:'<path d="M5 19l10-10 2 2L7 21z"/><path d="M15 9l3-3 2 2-3 3"/>',
+  washer:'<rect x="4" y="3.5" width="16" height="17" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M6.5 6.5h.01M9 6.5h.01"/>',
+  watch:'<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M9 7l1-3h4l1 3M9 17l1 3h4l1-3M12 10v2.5l1.5 1"/>',
+  battery:'<rect x="5" y="6" width="12" height="13" rx="2"/><path d="M9 3h4v3H9zM8 10h6M8 13h6M8 16h6"/>',
+  plug:'<path d="M8 3v5M14 3v5M6 8h10v3a5 5 0 0 1-10 0zM11 16v5"/>',
+  robovac:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 4v-1M9 5l-1-2M15 5l1-2"/>',
+  kettle:'<path d="M5 11h12v7a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3zM17 13h2.5a2 2 0 0 1 0 4H17M9 11a3 3 0 0 1 6 0"/>',
+  box:'<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>',
+  sparkshoe:'<path d="M3 16h18v2H3zM3 16c2-4 6-5 9-5l3 2 5 1v2"/><path d="M19 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1z"/>'
+}, ['bag','shirt']);
+addGroup('Здоровье', '#e0484c', {
+  drops:'<path d="M5 4v9M9 4v9M13 4v9M4 16h14M4 19h14"/>',
+  tube:'<rect x="8" y="3" width="8" height="5" rx="1"/><path d="M9 8h6l-1 12h-4z"/>',
+  dentist:'<path d="M7 5c2-1 3 0 5 0s3-1 5 0c1 1 1 4 0 7l-1 6h-2l-1-4-1 4H9l-1-6c-1-3-1-6-1-7z"/><path d="M17 4v4M15 6h4"/>',
+  lotus:'<path d="M12 20V11M12 11c-3 0-5-2-6-5 2 0 4 1 6 5zM12 11c3 0 5-2 6-5-2 0-4 1-6 5zM7 17c2-1 3-2 5-2s3 1 5 2"/>',
+  glasses:'<circle cx="6.5" cy="13" r="3"/><circle cx="17.5" cy="13" r="3"/><path d="M9.5 13h5M3.5 13 3 9M20.5 13 21 9"/>',
+  mortar:'<path d="M5 12h14a7 7 0 0 1-14 0z"/><path d="M8 12V8l4-4 4 4v4"/>',
+  syringe:'<path d="M4 20l5-5M9 15l6-6M13 5l6 6M11 7l6 6M7 17l2 2M14 4l4-2 2 2-2 4"/>',
+  shield:'<path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M12 9v6M9 12h6"/>',
+  heart:'<path d="M12 20c-5-3-8-6-8-10 0-2.5 2-4.5 4.5-4.5 1.5 0 2.5.8 3.5 2 1-1.2 2-2 3.5-2C18 5.5 20 7.5 20 10c0 4-3 7-8 10z"/>',
+  spine:'<path d="M9 4v16M15 4v16"/><circle cx="12" cy="8" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="16" r="1.5"/>',
+  kit:'<rect x="3.5" y="7" width="17" height="13" rx="2"/><path d="M9 7V5h6v2M12 10v6M9 13h6"/>',
+  stetho:'<path d="M6 4v5a4 4 0 0 0 8 0V4M10 13v2a4 4 0 0 0 8 0v-1"/><circle cx="18" cy="12" r="2"/>',
+  bandage:'<rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-30 12 12)"/><path d="M8 12h.01M11 9h.01M14 15h.01M10 15h.01"/>'
+}, ['health','pill','tooth']);
+addGroup('Красота', '#d0628f', {
+  lipstick:'<rect x="5" y="9" width="6" height="11" rx="1"/><path d="M5 9l3-6 3 6"/>',
+  brow:'<path d="M3 11c3-4 7-4 9 0M4 15c3-2 5-2 8 0"/>',
+  lashes:'<path d="M4 13c4-4 12-4 16 0M7 16l-1 3M11 17l-.5 3M15 17l.5 3M19 16l1 3"/>',
+  cream:'<ellipse cx="12" cy="10" rx="8" ry="3"/><path d="M4 10v5c0 1.5 3.5 3 8 3s8-1.5 8-3v-5"/>',
+  salon:'<path d="M6 3v12M9 3v12M4 15h4M14 6l6-3M14 8l7 3-7 3"/>',
+  lips:'<path d="M3 12c3-3 6-3 9-1 3-2 6-2 9 1-3 5-6 6-9 4-3 2-6 1-9-4z"/>',
+  nail:'<path d="M8 20V9a4 4 0 0 1 8 0v11z"/><path d="M10 9h4"/>',
+  perfume:'<path d="M9 9h6v10a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1zM10 9V6h4v3M11 3h2v3h-2z"/>',
+  mustache:'<path d="M4 13c2-3 5 0 8 0s6-3 8 0c-2 2-4 1-8-1-4 2-6 3-8 1z"/>',
+  bottles:'<rect x="5" y="9" width="5" height="11" rx="1"/><rect x="11" y="6" width="5" height="14" rx="1"/><path d="M5 12h5M11 9h5"/>',
+  mirror:'<circle cx="12" cy="10" r="6"/><path d="M12 16v4M8 20h8M9 7l2 2"/>',
+  dryer:'<path d="M7 9h10l3-3v10l-3-3H7zM7 9v6c0 2 1 4 3 4"/>',
+  robe:'<path d="M8 4l4 3 4-3 4 4-3 2v11H7V10L4 8z"/>'
+});
+addGroup('Транспорт', '#4a72c4', {
+  yacht:'<path d="M3 15h18l-3 4H6zM7 15V5l6 10M13 8l4 7"/>',
+  jerrycan:'<rect x="7" y="5" width="10" height="15" rx="2"/><path d="M10 5V3h4v2M7 10h10"/>',
+  car:'<path d="M4 15v-3l2-4h12l2 4v3z"/><path d="M4 15h16v3H4zM7 18v1M17 18v1M7 12h10"/>',
+  carwash:'<path d="M4 15v-3l2-4h12l2 4v3z"/><path d="M4 15h16v3H4z"/><path d="M8 4v2M12 4v2M16 4v2"/>',
+  cablecar:'<path d="M3 5h18M8 5v3M16 5v3M8 8h8l1 9H7z"/>',
+  route:'<path d="M12 21c-4-5-6-8-6-11a6 6 0 0 1 12 0c0 3-2 6-6 11z"/><circle cx="12" cy="10" r="2"/>',
+  heli:'<path d="M3 10h14l4-2M9 10v3h7l2-3M5 16h10M10 13v3"/>',
+  metro:'<rect x="6" y="3.5" width="12" height="14" rx="3"/><path d="M6 11h12M9 17.5l-2 3M15 17.5l2 3M9 14h.01M15 14h.01"/>',
+  scooter:'<circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M6 18h4l3-6h4M10 12l-3-6h4M14 12l3-2"/>',
+  moto:'<circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l4-6h5l3 6M10 10l-1-3h3"/>',
+  parking:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 16V8h3.5a2.5 2.5 0 0 1 0 5H9"/>',
+  insurance:'<path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+  gasstation:'<rect x="5" y="5" width="9" height="15" rx="1"/><path d="M5 10h9M14 9l3 2v7a1 1 0 0 0 2 0V8l-2-2"/>',
+  escooter:'<circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M6 18l6-12h6M12 6h-3"/>',
+  tram:'<rect x="5" y="4" width="14" height="13" rx="3"/><path d="M5 10h14M8 17l-2 3M16 17l2 3M9 13.5h.01M15 13.5h.01M12 4V1"/>',
+  tram2:'<path d="M4 6h16v10H4zM7 16l-2 4M17 16l2 4M4 11h16"/>',
+  evcar:'<path d="M4 15v-3l2-4h12l2 4v3z"/><path d="M4 15h16v3H4zM13 3l-3 6h4l-3 6"/>',
+  caravan:'<path d="M4 16V9a2 2 0 0 1 2-2h12a4 4 0 0 1 4 4v5z"/><path d="M3 16h18M8 16v2M16 16v2"/>',
+  gavel:'<path d="M14 4l6 6-4 4-6-6z"/><path d="M8 15l-5 5M3 20h6M7 13l3 3"/>',
+  tire:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><path d="M12 3.5v4.5M12 16v4.5M3.5 12H8M16 12h4.5"/>'
+}, ['bus','taxi','train','fuel','plane']);
+addGroup('Развлечения', '#a77bff', {
+  cocktail:'<path d="M5 4h14l-7 8zM12 12v8M8 20h8M16 3l-3 4"/>',
+  balloon:'<ellipse cx="12" cy="9" rx="5" ry="6"/><path d="M12 15l-1.5 2h3zM12 17v4"/>',
+  cutlery:'<path d="M8 3v7a2 2 0 0 0 4 0V3M10 12v9M16 3c-1.5 2-1.5 6 0 7v11"/>',
+  cards:'<rect x="5" y="5" width="11" height="14" rx="2"/><rect x="8" y="3" width="11" height="14" rx="2"/>',
+  chess:'<path d="M7 20h10M8 17h8c0-4-2-5-2-8l1-2-2-2-2 2 1 2c0 3-2 4-2 8z"/>',
+  dice:'<rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="8.5" cy="8.5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="15.5" cy="15.5" r="1"/>',
+  group:'<circle cx="7" cy="7" r="2.5"/><circle cx="12" cy="7" r="2.5"/><circle cx="17" cy="7" r="2.5"/><path d="M3 20v-3a4 4 0 0 1 8 0v3M9 20v-3a4 4 0 0 1 8 0v3"/>',
+  target:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12l7-7M16 4h4v4"/>',
+  ticket14:'<path d="M3 8h18v3a2 2 0 0 0 0 2v3H3v-3a2 2 0 0 0 0-2z"/><path d="M8 8v8M10 12h4"/>',
+  lottery:'<rect x="5" y="4" width="14" height="16" rx="2"/><circle cx="12" cy="12" r="4"/><path d="M5 9h14"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6"/>',
+  popcorn:'<path d="M6 10l1 11h10l1-11z"/><path d="M8 10c-2 0-3-2-2-4 1-1 3 0 4 0 1-2 4-2 5 0 2 0 3 2 2 4"/>',
+  theater:'<path d="M5 8c0-3 3-4 5-2 1-1 4-1 5 0 2-2 5-1 5 2 0 4-2 7-5 9-3-2-5-5-5-9"/>',
+  stadium:'<path d="M3 16c0-5 4-8 9-8s9 3 9 8H3z"/><path d="M12 8V4M9 4h6M5 18h14"/>',
+  fishing:'<path d="M4 20 16 5M16 5v6a4 4 0 0 1-4 4"/><path d="M14 17c1 1 2 1 3 0M18 20c0-2-2-2-2-3"/>',
+  knitting:'<path d="M4 20 20 4M18 3l3 3"/>',
+  headphones:'<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/>',
+  clapper:'<path d="M4 9h16v11H4zM4 9l2-5 4 1 1 4M10 9l2-5 4 1 1 4"/>',
+  menu:'<path d="M4 4h12v16H4zM8 9h4M8 13h4"/><path d="M18 8v11a2 2 0 0 1-2 2H7"/>',
+  cloche:'<path d="M3 17h18M5 17a7 7 0 0 1 14 0"/><path d="M12 6v-1"/>'
+}, ['film','music','game','ticket']);
+addGroup('Счета', '#26c6da', {
+  receipt:'<path d="M6 3h12v18l-2-1.5L14 21l-2-1.5L10 21l-2-1.5L6 21z"/><path d="M9 8h6M9 12h6M9 16h4"/>',
+  scroll:'<path d="M6 4h12v14a2 2 0 0 0 2 2H8a2 2 0 0 1-2-2V6"/><path d="M9 8h6M9 12h6"/>',
+  service:'<path d="M14 4a4 4 0 0 0-4 5L4 15l3 3 6-6a4 4 0 0 0 5-4l-2 1-2-2z"/>',
+  gasflame:'<path d="M12 3c2 3 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-8z"/>',
+  eco:'<path d="M5 19c0-8 5-13 14-14 0 9-5 14-13 14z"/><path d="M5 19l7-7"/>',
+  phonedollar:'<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M12 8v8M10 9.5c0-1 4-1 4 .5s-4 1.5-4 3 4 1.5 4-.5"/>',
+  phonecart:'<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M9 8h1.5l1 4h3l1-3H11"/>',
+  homedollar:'<path d="M3 11l9-7 9 7v9H3z"/><path d="M12 9v6M10.5 10c0-.5 3-.5 3 .5s-3 1-3 2 3 1 3 .5"/>',
+  safe:'<rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="4"/><path d="M12 8v8M8 12h8"/>',
+  faucet:'<path d="M5 9h8V5M13 9v5M11 14h2M4 20h4M15 14c0 2 1.5 3 2 4"/>',
+  docpercent:'<path d="M6 3h9l4 4v14H6z"/><path d="M9 16l6-6M9 10h.01M15 16h.01"/>',
+  trash:'<path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/>',
+  drop:'<path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/>',
+  globe:'<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c3 3 3 14 0 17M12 3.5c-3 3-3 14 0 17"/>',
+  touch:'<rect x="4" y="4" width="16" height="6" rx="1"/><path d="M12 14v-4M10 12l2-2 2 2M9 14l3 4 3-4"/>',
+  crown:'<path d="M4 17l-1-9 5 4 4-6 4 6 5-4-1 9z"/>',
+  chip:'<rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M10 4v3M14 4v3M10 17v3M14 17v3M4 10h3M4 14h3M17 10h3M17 14h3"/>',
+  docgear:'<path d="M6 3h9l4 4v14H6z"/><circle cx="12" cy="14" r="2.5"/>',
+  docs:'<path d="M8 4h9l3 3v11H8z"/><path d="M5 7v12h10"/>'
+}, ['wifi','bolt','phone','bulb']);
+addGroup('Финансы', '#5fb8a6', {
+  handstar:'<path d="M3 13h4l4 3h4c1 0 1-2 0-2h-3l-4-3"/><path d="M12 3l1 2 2 .3-1.5 1.4.4 2.1L12 8l-1.9 1 .4-2.1L9 5.3l2-.3z"/>',
+  calc:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h2M12 11h2M8 15h2M12 15h2M8 19h8"/>',
+  creditcards:'<rect x="3" y="5" width="13" height="10" rx="2"/><path d="M7 10h4M8 18h11V11"/>',
+  dollarcoin:'<circle cx="12" cy="12" r="8.5"/><path d="M14.5 9.5c-.5-1-1.5-1.5-2.5-1.5-1.5 0-2.5.8-2.5 2s1 1.7 2.5 2 2.5.8 2.5 2-1 2-2.5 2c-1.2 0-2.2-.5-2.5-1.5M12 6v1.5M12 16.5V18"/>',
+  eurocoin:'<circle cx="12" cy="12" r="8.5"/><path d="M15 9.5a4 4 0 1 0 0 5M7.5 11h5M7.5 13h5"/>',
+  coinstack:'<ellipse cx="9" cy="6" rx="5" ry="2"/><path d="M4 6v4c0 1 2 2 5 2s5-1 5-2V6M4 10v4c0 1 2 2 5 2s5-1 5-2v-4"/><circle cx="16" cy="16" r="4.5"/>',
+  bars:'<path d="M5 20V13M11 20V8M17 20V4"/>',
+  envelope:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 9l9 6 9-6M8 4h8v3"/>',
+  linechart:'<path d="M3 17l5-5 4 3 8-7"/><path d="M3 20h18"/>',
+  moneybag:'<path d="M8 8h8c2 2 3 5 3 8a6 6 0 0 1-14 0c0-3 1-6 3-8z"/><path d="M9 8c0-2 1-3 3-3s3 1 3 3M12 11v4"/>',
+  cash:'<rect x="3" y="7" width="18" height="10" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10h.01M18 14h.01"/>',
+  handcash:'<path d="M3 15h4l4 2h4a2 2 0 0 0 0-4h-3l-2-2"/><rect x="14" y="4" width="7" height="8" rx="1"/>',
+  percent2:'<path d="M5 19L19 5"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
+  handcoins:'<path d="M3 14h4l4 2h5a2 2 0 0 0 0-4h-3"/><circle cx="16" cy="7" r="3"/><circle cx="19" cy="10" r="2"/>',
+  dollarback:'<path d="M5 12a7 7 0 1 0 2-5"/><path d="M5 4v4h4"/><path d="M12 9v6M10.5 10c0-.5 3-.5 3 .5s-3 1-3 2 3 1 3 .5"/>',
+  tie:'<path d="M9 3h6l-1 4 2 14h-2l-2-10-2 10H8l2-14z"/>',
+  globecard:'<circle cx="9" cy="9" r="6"/><rect x="11" y="13" width="10" height="7" rx="1.5"/>',
+  coins:'<circle cx="9" cy="9" r="5"/><circle cx="15" cy="15" r="5"/>',
+  invoice:'<path d="M6 3h9l4 4v14l-2-1.5-2 1.5-2-1.5-2 1.5L9 20.5 7 19l-1 1z"/><circle cx="14" cy="14" r="2.5"/>'
+}, ['bank','card','piggy','wallet']);
+addGroup('Ферма', '#7fae52', {
+  harvester:'<rect x="4" y="11" width="10" height="5" rx="1"/><path d="M14 11h5l-1-5h-4M6 16h10"/>',
+  tractor:'<circle cx="7" cy="16" r="3.5"/><circle cx="17" cy="18" r="2"/><path d="M4 12h8l1-4h3v4M11 12v-2"/>',
+  trailer:'<path d="M3 9h18M5 9v5M19 9v5M3 14h18"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',
+  plow:'<path d="M3 17h18M5 17l3-5 3 5M12 17l3-5 3 5"/><path d="M3 9h10"/>',
+  appletree:'<circle cx="12" cy="9" r="6"/><path d="M12 15v6M8 21h8M9 8h.01M14 9h.01M11 6h.01"/>',
+  sprout:'<path d="M12 21v-9M12 12c-4 0-6-3-6-6 4 0 6 3 6 6zM12 12c4 0 6-3 6-6-4 0-6 3-6 6zM6 21h12"/>',
+  seedbag:'<path d="M6 8h12l1 12H5z"/><path d="M9 8c0-3 6-3 6 0M12 13v4"/>',
+  shovel:'<path d="M14 3l3 3-7 9-3-3zM10 12l-6 6"/>'
+});
+addGroup('Другое', '#8a8a8a', {
+  cigarette:'<path d="M3 16h14v3H3zM17 15l4-6"/><path d="M19 4c0 1-1 1-1 2s1 1 1 2"/>',
+  info:'<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/>',
+  star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  cross:'<path d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z"/>',
+  church:'<path d="M5 21V11l7-6 7 6v10z"/><path d="M12 5V2M10 21v-4h4v4"/>',
+  mosque:'<path d="M4 20V13a8 8 0 0 1 16 0v7z"/><path d="M12 5v-2M10 21v-4h4v4"/>',
+  davidstar:'<path d="M12 3l7 12H5z"/><path d="M12 21l-7-12h14z"/>',
+  dharma:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 4v5M12 15v5M4 12h5M15 12h5"/>',
+  charity:'<path d="M3 13h4l4 2h4a2 2 0 0 0 0-4h-3l-2-2"/><path d="M14 4c0 1.5 2 2 2 4s-2-2.5-2 0c0-2.5-2-2.5-2 0 0-2 2-2.5 2-4z"/>',
+  candle:'<rect x="9" y="10" width="6" height="11" rx="1"/><path d="M12 3c1 2 1 4 0 5-1-1-1-3 0-5z"/>',
+  homeheart:'<path d="M3 11l9-7 9 7v9H3z"/><path d="M12 16s-3-1.8-3-3.5c0-1 .8-1.7 1.5-1.7.7 0 1.2.5 1.5 1 .3-.5.8-1 1.5-1 .7 0 1.5.7 1.5 1.7 0 1.7-3 3.5-3 3.5z"/>',
+  globeheart:'<circle cx="12" cy="12" r="8.5"/><path d="M12 16s-3-1.8-3-3.5c0-1 .8-1.7 1.5-1.7.7 0 1.2.5 1.5 1 .3-.5.8-1 1.5-1 .7 0 1.5.7 1.5 1.7 0 1.7-3 3.5-3 3.5z"/>'
+}, ['other']);
+const ico = (key, cls = '', color = null) => `<span class="ico ${cls}" style="background:${color || ICON_COLOR[key]}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON_SVG[key]}</svg></span>`;
+const catColor = c => c.color || ICON_COLOR[c.icon];
+
+/* ---------- Категории и теги (тег принадлежит категории) ---------- */
+let CAT = [
+  {id:'e1', name:'Продукты', icon:'basket', type:'expense'},
+  {id:'e2', name:'Здоровье', icon:'health', type:'expense'},
+  {id:'e3', name:'Подарки', icon:'gift', type:'expense'},
+  {id:'e4', name:'Коммунальные', icon:'building', type:'expense'},
+  {id:'e5', name:'Гигиена', icon:'hygiene', type:'expense'},
+  {id:'e6', name:'Транспорт', icon:'bus', type:'expense'},
+  {id:'e7', name:'Еда не дома', icon:'croissant', type:'expense'},
+  {id:'e8', name:'Телефон-интернет', icon:'phone', type:'expense'},
+  {id:'e9', name:'Другое', icon:'other', type:'expense'},
+  {id:'i1', name:'Зарплата', icon:'wallet', type:'income'},
+  {id:'i2', name:'Подработка', icon:'briefcase', type:'income'},
+  {id:'i3', name:'Другое', icon:'other', type:'income'}
+];
+let TAGS = [
+  {id:'t1', name:'Супермаркет', catId:'e1'},
+  {id:'t2', name:'Рынок', catId:'e1'},
+  {id:'t3', name:'Лекарства', catId:'e2'},
+  {id:'t4', name:'Доктор', catId:'e2'},
+  {id:'t5', name:'Друзья', catId:'e3'},
+  {id:'t6', name:'Семья', catId:'e3'},
+  {id:'t7', name:'Метро', catId:'e6'},
+  {id:'t8', name:'Оринабижи', catId:'e1'},
+  {id:'t9', name:'Мороженое', catId:'e7'},
+  {id:'t10', name:'Выпечка', catId:'e7'},
+  {id:'t11', name:'Олегу на ДР', catId:'e3'},
+  {id:'t12', name:'Дарина', catId:'e3'},
+  {id:'t13', name:'Такси', catId:'e6'},
+  {id:'t14', name:'Автобус', catId:'e6'},
+  {id:'t15', name:'Property Maintenance', catId:'e4'},
+  {id:'t16', name:'Свет', catId:'e4'},
+  {id:'t17', name:'Газ', catId:'e4'},
+  {id:'t18', name:'Вода', catId:'e4'}
+];
+const catOf = id => CAT.find(c => c.id === id) || {id:'', name:'Без категории', icon:'other'};
+const tagOf = id => TAGS.find(t => t.id === id);
+const tagsOf = catId => TAGS.filter(t => t.catId === catId);
+
+/* ---------- Валюты: rate = сколько $ в одной единице ---------- */
+let CUR = [
+  {code:'USD', sym:'$', rate:1},
+  {code:'EUR', sym:'€', rate:1.08},
+  {code:'GEL', sym:'₾', rate:0.37},
+  {code:'UAH', sym:'₴', rate:0.024}
+];
+const curOf = code => CUR.find(c => c.code === code) || CUR[0];
+
+let OPS = [];
+let idc = 0;
+
+/* Октябрь 2026 — траты из Excel-файла другого приложения (29 записей, курсы из файла) */
+OPS = [
+  {id:9001, date:'2026-10-26', type:'expense', catId:'e1', tagId:null, amount:11.0, cur:'GEL', rate:0.386364, usd:4.25, note:"Майонез в ред маркете плюс вода с автомата"},
+  {id:9002, date:'2026-10-25', type:'expense', catId:'e3', tagId:'t11', amount:35.0, cur:'GEL', rate:0.386, usd:13.51, note:"Чайник"},
+  {id:9003, date:'2026-10-25', type:'expense', catId:'e6', tagId:'t13', amount:4.6, cur:'GEL', rate:0.386957, usd:1.78, note:"От Олега с Виолой домой"},
+  {id:9004, date:'2026-10-25', type:'expense', catId:'e9', tagId:null, amount:3.14, cur:'GEL', rate:0.38535, usd:1.21, note:""},
+  {id:9005, date:'2026-10-25', type:'expense', catId:'e6', tagId:'t14', amount:1.4, cur:'GEL', rate:0.385714, usd:0.54, note:""},
+  {id:9006, date:'2026-10-24', type:'expense', catId:'e1', tagId:null, amount:90.81, cur:'GEL', rate:0.386081, usd:35.06, note:"В магнити  75 + овощи рядом 15"},
+  {id:9007, date:'2026-10-24', type:'expense', catId:'e7', tagId:'t9', amount:2.2, cur:'GEL', rate:0.386364, usd:0.85, note:""},
+  {id:9008, date:'2026-10-24', type:'expense', catId:'e6', tagId:'t14', amount:2.8, cur:'GEL', rate:0.385714, usd:1.08, note:""},
+  {id:9009, date:'2026-10-24', type:'expense', catId:'e5', tagId:null, amount:19.8, cur:'GEL', rate:0.385859, usd:7.64, note:"Туалетная бумага из карефура"},
+  {id:9010, date:'2026-10-23', type:'expense', catId:'e1', tagId:null, amount:28.0, cur:'GEL', rate:0.386071, usd:10.81, note:"Spar"},
+  {id:9011, date:'2026-10-23', type:'expense', catId:'e1', tagId:null, amount:69.25, cur:'GEL', rate:0.386137, usd:26.74, note:"Rad market"},
+  {id:9012, date:'2026-10-23', type:'expense', catId:'e6', tagId:'t14', amount:0.7, cur:'GEL', rate:0.385714, usd:0.27, note:"Ехал от Данилы"},
+  {id:9013, date:'2026-10-23', type:'expense', catId:'e3', tagId:'t12', amount:5.0, cur:'GEL', rate:0.386, usd:1.93, note:"Цветок"},
+  {id:9014, date:'2026-10-21', type:'expense', catId:'e4', tagId:'t18', amount:1.39, cur:'GEL', rate:0.388489, usd:0.54, note:"Вода"},
+  {id:9015, date:'2026-10-20', type:'expense', catId:'e2', tagId:'t3', amount:340.0, cur:'GEL', rate:0.385353, usd:131.02, note:""},
+  {id:9016, date:'2026-10-20', type:'expense', catId:'e1', tagId:'t8', amount:90.0, cur:'GEL', rate:0.385333, usd:34.68, note:""},
+  {id:9017, date:'2026-10-20', type:'expense', catId:'e2', tagId:'t4', amount:266.0, cur:'GEL', rate:0.385338, usd:102.5, note:"Терапевт для Дарины 120 за визит и 146 за кровь и флюрагопфию"},
+  {id:9018, date:'2026-10-20', type:'expense', catId:'e7', tagId:'t10', amount:8.0, cur:'GEL', rate:0.385, usd:3.08, note:""},
+  {id:9019, date:'2026-10-20', type:'expense', catId:'e6', tagId:'t13', amount:6.4, cur:'GEL', rate:0.385937, usd:2.47, note:"Ездили в больницу(Дарине было плохо)"},
+  {id:9020, date:'2026-10-20', type:'expense', catId:'e8', tagId:null, amount:3.0, cur:'GEL', rate:0.386667, usd:1.16, note:""},
+  {id:9021, date:'2026-10-19', type:'expense', catId:'e3', tagId:'t11', amount:4000.0, cur:'UAH', rate:0.022195, usd:88.78, note:"Олегу на ДР"},
+  {id:9022, date:'2026-10-19', type:'expense', catId:'e1', tagId:null, amount:29.0, cur:'GEL', rate:0.386207, usd:11.2, note:"Айран, крем сыр, молоко, сыр"},
+  {id:9023, date:'2026-10-19', type:'expense', catId:'e1', tagId:null, amount:25.0, cur:'GEL', rate:0.386, usd:9.65, note:"Помидоры, огурцы, киви, 10 яиц, Два лимона"},
+  {id:9024, date:'2026-10-18', type:'expense', catId:'e1', tagId:null, amount:13.47, cur:'GEL', rate:0.386043, usd:5.2, note:"Чипсы крем сыр сникерс"},
+  {id:9025, date:'2026-10-15', type:'expense', catId:'e4', tagId:'t15', amount:50.0, cur:'GEL', rate:0.386, usd:19.3, note:""},
+  {id:9026, date:'2026-10-11', type:'expense', catId:'e1', tagId:'t8', amount:2855.0, cur:'UAH', rate:0.0222, usd:63.38, note:""},
+  {id:9027, date:'2026-10-09', type:'expense', catId:'e4', tagId:'t16', amount:20.32, cur:'GEL', rate:0.386319, usd:7.85, note:""},
+  {id:9028, date:'2026-10-09', type:'expense', catId:'e4', tagId:'t17', amount:6.83, cur:'GEL', rate:0.38653, usd:2.64, note:""},
+  {id:9029, date:'2026-10-02', type:'expense', catId:'e1', tagId:'t8', amount:210.0, cur:'GEL', rate:0.386143, usd:81.09, note:""}
 ];
 
-function freshDb(){ return {currency:'₴', cats: JSON.parse(JSON.stringify(DEFAULT_CATS)), ops: []}; }
+const st = {
+  view: 'home',
+  mode: 'day',
+  date: '2026-10-27',
+  month: '2026-10',
+  year: 2026,
+  calMonth: '2026-10',
+  pickYear: 2026,
+  opFilter: 'all',
+  opSort: 'date',
+  repType: 'expense',
+  catType: 'expense',
+  openCats: {},        // какие категории раскрыты в отчёте
+  tagF: [],            // выбранные теги для фильтра отчёта
+  opTagF: [],          // выбранные теги для фильтра операций
+  repCal: '2026-10',   // месяц календаря в отчёте
+  repSel: null,        // категория, выбранная кликом по кругу
+  showBudgets: true,   // переключатель «Показывать бюджеты» в настройках
+  budgets: {},
+  tagFTarget: 'reports',
+  editOp: null,
+  draftType: 'expense',
+  draftCur: 'USD',
+  draftTag: null,
+  editCat: null,
+  catDraftId: null,
+  catIcon: 'other',
+  catColor: '#8a8a8a',
+  catColorTouched: false,
+  catTags: [],         // теги, которые редактируются в карточке категории
+  draftPhotos: []      // фото в открытой операции
+};
 
-function load(){
-  try {
-    const d = JSON.parse(localStorage.getItem(KEY));
-    if (d && Array.isArray(d.cats) && Array.isArray(d.ops)) return d;
-  } catch (e) {}
-  return freshDb();
-}
-let db = load();
-
-function save(){
-  try { localStorage.setItem(KEY, JSON.stringify(db)); }
-  catch (e) { alert('Не удалось сохранить данные. Проверьте место в телефоне.'); }
-}
-
-let tab = 'home';
-let month = todayISO().slice(0,7);
-let opFilter = 'all', opSort = 'date', repType = 'expense', catType = 'expense';
-let editId = null, draft = null, catEdit = null;
-
-function todayISO(){
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0,10);
-}
-function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function money(n){ return new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2}).format(n) + ' ' + db.currency; }
-function fmtDate(iso){ const [y,m,d] = iso.split('-'); return `${d}.${m}.${y}`; }
-function shift(ym, delta){
-  let [y, m] = ym.split('-').map(Number);
-  m += delta;
-  while (m < 1) { m += 12; y--; }
-  while (m > 12) { m -= 12; y++; }
-  return `${y}-${String(m).padStart(2,'0')}`;
-}
-function step(key, delta){
-  if (key.length !== 10) return shift(key, delta);
-  const dt = new Date(key + 'T12:00:00');
-  dt.setDate(dt.getDate() + delta);
-  const z = n => String(n).padStart(2, '0');
-  return `${dt.getFullYear()}-${z(dt.getMonth() + 1)}-${z(dt.getDate())}`;
-}
-function monthTitle(ym){
-  if (ym.length === 10) {
-    const [y, m, d] = ym.split('-').map(Number);
-    return new Date(y, m-1, d).toLocaleString('ru-RU', {day:'numeric', month:'long', year:'numeric'});
+/* ---------- Период ---------- */
+const inPeriod = o => {
+  if (st.mode === 'day') return o.date === st.date;
+  if (st.mode === 'month') return o.date.startsWith(st.month);
+  if (st.mode === 'year') return o.date.startsWith(String(st.year));
+  return true;
+};
+const periodLabel = () => {
+  if (st.mode === 'day') { const [y,m,d] = st.date.split('-').map(Number); return `${d} ${MONTHS_GEN[m-1]} ${y}`; }
+  if (st.mode === 'month') { const [y,m] = st.month.split('-').map(Number); return `${MONTHS[m-1].toLowerCase()} ${y}`; }
+  if (st.mode === 'year') return `${st.year} год`;
+  return 'всё время';
+};
+function periodBlock(){
+  let picker;
+  if (st.mode === 'day') {
+    const [y,m,d] = st.date.split('-').map(Number);
+    picker = `<button class="picker-btn" data-act="openCal">${d} ${MONTHS_GEN[m-1]} ${y} <small>▾</small></button>`;
+  } else if (st.mode === 'month') {
+    const [y,m] = st.month.split('-').map(Number);
+    picker = `<button class="picker-btn" data-act="openSheet" data-v="month">${MONTHS[m-1]} ${y} <small>▾</small></button>`;
+  } else if (st.mode === 'year') {
+    picker = `<button class="picker-btn" data-act="openSheet" data-v="year">${st.year} <small>▾</small></button>`;
+  } else {
+    picker = `<span class="picker-static">Вся история</span>`;
   }
-  const [y, m] = ym.split('-').map(Number);
-  const s = new Date(y, m-1, 1).toLocaleString('ru-RU', {month:'long', year:'numeric'});
-  return s.charAt(0).toUpperCase() + s.slice(1);
+  const btn = (v, label) => `<button data-act="mode" data-v="${v}" aria-pressed="${st.mode === v}">${label}</button>`;
+  return `<div class="periods" role="group" aria-label="Период">${btn('day','День')}${btn('month','Месяц')}${btn('year','Год')}${btn('all','Всё время')}</div>
+    <div class="picker">${picker}</div>`;
 }
-function cat(id){ return db.cats.find(c => c.id === id) || {id:'', name:'Без категории', color:'#8a93a6'}; }
-function sumBy(list){ return list.reduce((a, o) => a + o.amount, 0); }
-function opsOf(ym){ return db.ops.filter(o => o.date.startsWith(ym)); }
-function sums(ym){
-  const l = opsOf(ym);
-  return {inc: sumBy(l.filter(o => o.type === 'income')), exp: sumBy(l.filter(o => o.type === 'expense'))};
-}
-function catTotals(ym, type){
-  const map = {};
-  opsOf(ym).filter(o => o.type === type).forEach(o => { map[o.catId] = (map[o.catId] || 0) + o.amount; });
-  return Object.entries(map)
-    .map(([id, total]) => ({...cat(id), total}))
-    .sort((a, b) => b.total - a.total);
-}
-function byDateDesc(a, b){ return b.date.localeCompare(a.date) || b.id.localeCompare(a.id); }
-function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
-function chip(v, label, act, cur){
-  return `<button class="chip ${cur === v ? 'on' : ''}" data-act="${act}" data-v="${v}">${label}</button>`;
-}
-function monthNav(){
-  const isDay = month.length === 10;
-  return `<div class="chips">${chip('day','День','setPeriod',isDay ? 'day' : 'month')}${chip('month','Месяц','setPeriod',isDay ? 'day' : 'month')}</div>
-    <div class="mnav"><button data-act="prev" aria-label="Назад">‹</button><span>${monthTitle(month)}</span><button data-act="next" aria-label="Вперёд">›</button></div>`;
-}
-function bar(t, max, total){
-  const pct = total ? Math.round(t.total / total * 100) : 0;
-  return `<div class="bar">
-    <div class="bar-top"><span><i class="dot" style="background:${t.color}"></i>${esc(t.name)}</span><b>${money(t.total)} · ${pct}%</b></div>
-    <div class="track"><div style="width:${(t.total / max * 100).toFixed(1)}%;background:${t.color}"></div></div>
-  </div>`;
-}
+/* ---------- Экраны ---------- */
+function sumUsd(list, type){ return list.filter(o => o.type === type).reduce((a,o) => a + o.usd, 0); }
 function opRow(o){
-  const c = cat(o.catId);
+  const c = catOf(o.catId);
+  const t = tagOf(o.tagId);
   const sign = o.type === 'income' ? '+' : '−';
+  const orig = o.cur === 'USD' ? '' : `${fmtNum(o.amount)} ${curOf(o.cur).sym} · `;
+  const tag = t ? `<span class="muted" style="font-size:13px"># ${esc(t.name)} · </span>` : '';
   return `<button class="op" data-act="editOp" data-id="${o.id}">
-    <i class="dot big" style="background:${c.color}"></i>
-    <span class="op-main"><b>${esc(c.name)}</b><small>${o.note ? esc(o.note) + ' · ' : ''}${fmtDate(o.date)}</small></span>
-    <span class="op-sum ${o.type === 'income' ? 'pos' : 'neg'}">${sign}${money(o.amount)}</span>
+    ${ico(c.icon, '', c.color)}
+    <span class="op-main"><b>${esc(c.name)}</b><small>${tag}${o.photos && o.photos.length ? '📷 ' + o.photos.length + ' · ' : ''}${o.note ? esc(o.note) + ' · ' : ''}${orig}${fmtDate(o.date)}</small></span>
+    <span class="op-sum ${o.type === 'income' ? 'pos' : 'neg'}">${sign}${usd(o.usd)}</span>
   </button>`;
 }
-function chart(){
-  const base = month.slice(0, 7);
-  const months = [0,1,2,3,4,5].map(i => shift(base, i - 5));
-  const data = months.map(m => sums(m));
+
+function homeView(list){
+  const inc = sumUsd(list, 'income');
+  const exp = sumUsd(list, 'expense');
+  const bal = inc - exp;
+  const pl = st.mode === 'day' ? 'за день' : 'за период';
+  const top = catRows(list, 'expense');
+  return `${periodBlock()}
+    <div class="card center balance"><small>Баланс</small><b class="${bal < 0 ? 'neg' : ''}">${bal < 0 ? '−' : ''}${usd(Math.abs(bal))}</b></div>
+    <div class="row2">
+      <div class="card"><small>Доходы ${pl}</small><b class="pos">${usd(inc)}</b></div>
+      <div class="card"><small>Расходы ${pl}</small><b class="neg">${usd(exp)}</b></div>
+    </div>
+    <h3>Топ категорий расходов</h3>
+    <div>${top.html}</div>`;
+}
+
+function opsView(list){
+  let items = list;
+  if (st.opFilter !== 'all') items = items.filter(o => o.type === st.opFilter);
+  if (st.opTagF.length) items = items.filter(o => st.opTagF.includes(o.tagId));
+  const chips = `<div class="chips">
+      ${[['all','Все'],['expense','Расходы'],['income','Доходы']].map(([v,l]) => `<button class="chip" data-act="opFilter" data-v="${v}" aria-pressed="${st.opFilter === v}">${l}</button>`).join('')}
+    </div>
+    <div class="chips">
+      ${[['date','По дате'],['amount','По сумме']].map(([v,l]) => `<button class="chip" data-act="opSort" data-v="${v}" aria-pressed="${st.opSort === v}">${l}</button>`).join('')}
+    </div>`;
+  let body;
+  if (!items.length) body = '<p class="muted center">Операций за этот период нет</p>';
+  else if (st.opSort === 'amount') {
+    body = `<div class="card list">${items.slice().sort((a,b) => b.usd - a.usd).map(opRow).join('')}</div>`;
+  } else {
+    const groups = {};
+    items.forEach(o => (groups[o.date] = groups[o.date] || []).push(o));
+    body = Object.keys(groups).sort().reverse().map(d => {
+      const g = groups[d];
+      const net = sumUsd(g, 'income') - sumUsd(g, 'expense');
+      return `<div class="day"><span>${fmtDate(d)}</span><span>${net >= 0 ? '+' : '−'}${usd(Math.abs(net))}</span></div>
+        <div class="card list">${g.sort((a,b) => b.id - a.id).map(opRow).join('')}</div>`;
+    }).join('');
+  }
+  const tagBtn = `<div class="chips"><button class="chip" data-act="openTagF" data-v="ops" aria-pressed="${st.opTagF.length > 0}">Фильтр по тегам${st.opTagF.length ? ' · ' + st.opTagF.length : ''}</button></div>`;
+  return `${periodBlock()}${tagBtn}${chips}${body}`;
+}
+
+/* Строки категорий с раскрытием: проценты, сумма и теги внутри */
+function catRows(list, type, withBudget = false){
+  const total = sumUsd(list, type);
+  const byCat = {};
+  list.filter(o => o.type === type).forEach(o => {
+    const r = byCat[o.catId] = byCat[o.catId] || {total: 0, tags: {}};
+    r.total += o.usd;
+    const key = o.tagId || 'none';
+    r.tags[key] = (r.tags[key] || 0) + o.usd;
+  });
+  const rows = Object.entries(byCat).map(([id, r]) => ({...catOf(id), ...r})).sort((a,b) => b.total - a.total);
+  const html = rows.length ? rows.map(r => {
+    const open = !!st.openCats[r.id];
+    const b = withBudget && st.mode === 'month' && st.showBudgets ? (st.budgets[st.month] || {})[r.id] : null;
+    const bud = b ? budgetStrip(b, r.total) : '';
+    const color = catColor(r);
+    const tagRows = Object.entries(r.tags).sort((a,b) => b[1] - a[1]).map(([key, sum]) => {
+      const name = key === 'none' ? 'Без тега' : tagOf(key).name;
+      return `<div class="trow"><span class="hash">#</span><span class="tname">${esc(name)}</span><b class="tsum">${usd(sum)}</b></div>`;
+    }).join('');
+    return `<div class="crow-wrap">
+      <button class="crow" data-act="toggleCat" data-v="${r.id}" aria-expanded="${open}">
+        ${ico(r.icon, '', color)}
+        <span class="name">${esc(r.name)}</span>
+        <span class="pct">${Math.round(r.total / total * 100)}%</span>
+        <span class="sum">${usd(r.total)}</span>
+        <span class="chev ${open ? 'open' : ''}">${open ? '▴' : '▾'}</span>
+      </button>
+      ${bud}
+      <div class="trk"><div class="track"><div style="width:${(r.total / total * 100).toFixed(1)}%;background:${color}"></div></div></div>
+      ${open ? `<div class="tagrows">${tagRows}</div>` : ''}
+    </div>`;
+  }).join('') : '<p class="muted center">Нет данных за этот период</p>';
+  return {total, html, data: rows};
+}
+
+/* Бюджет на месяц: строка и полоска под категорией в отчёте (цвет: зелёный до 80%, жёлтый до 100%, красный дальше) */
+function budgetStrip(b, spent){
+  const left = b - spent;
+  const pct = spent / b * 100;
+  const color = pct < 80 ? 'var(--green)' : pct <= 100 ? '#e0a83a' : 'var(--red)';
+  return `<div class="budget">из ${usd(b)} · ${left >= 0 ? 'осталось ' + usd(left) : 'перерасход ' + usd(-left)}
+    <div class="bbar"><div style="width:${Math.min(pct, 100).toFixed(0)}%;background:${color}"></div></div></div>`;
+}
+/* Окно бюджетов на выбранный месяц: можно скопировать значения с прошлого месяца */
+function drawBudgets(){
+  const [y,m] = st.month.split('-').map(Number);
+  const prev = m === 1 ? `${y - 1}-12` : `${y}-${pad(m - 1)}`;
+  const cur = st.budgets[st.month] || {};
+  const rows = CAT.filter(c => c.type === 'expense').map(c => `
+    <div class="brow"><span>${esc(c.name)}</span><input type="text" inputmode="decimal" data-bud="${c.id}" value="${cur[c.id] || ''}" placeholder="нет" aria-label="Бюджет ${esc(c.name)}"></div>`).join('');
+  openSheet(`
+    <div class="sheet-head">
+      <button class="btn ghost" data-act="closeSheet">Отмена</button>
+      <h2>Бюджеты · ${MONTHS[m-1]} ${y}</h2>
+      <button class="btn" data-act="saveBudgets">Готово</button>
+    </div>
+    <div class="chips"><button class="chip" data-act="copyBudgets" data-v="${prev}">Как в прошлом месяце</button></div>
+    ${rows}
+    <p class="sub">Пустое поле — бюджета на этот месяц нет. Суммы в долларах.</p>`);
+}
+function saveBudgets(){
+  const out = {};
+  document.querySelectorAll('[data-bud]').forEach(i => {
+    const v = parseFloat(i.value.replace(',', '.'));
+    if (v > 0) out[i.dataset.bud] = v;
+  });
+  st.budgets[st.month] = out;
+  closeSheet(); render();
+}
+function copyBudgets(el){
+  const src = st.budgets[el.dataset.v] || {};
+  document.querySelectorAll('[data-bud]').forEach(i => { i.value = src[i.dataset.bud] || ''; });
+}
+
+/* Кружок в отчётах: доли категорий и итог в центре */
+function donut(data, total){
+  const C = 2 * Math.PI * 80;
+  let off = 0;
+  let badges = '';
+  const sel = st.repSel ? data.find(r => r.id === st.repSel) : null;
+  const segs = data.map(r => {
+    const len = total ? r.total / total * C : 0;
+    const dim = sel && sel.id !== r.id;
+    const s = `<circle data-act="donutSeg" data-v="${r.id}" cx="100" cy="100" r="80" fill="none" stroke="${catColor(r)}" stroke-width="22" stroke-dasharray="${Math.max(len - 2, 0).toFixed(2)} ${C.toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 100 100)" opacity="${dim ? .3 : 1}" style="cursor:pointer"/>`;
+    if (total && r.total / total >= 0.04) {
+      const ang = ((off + len / 2) / C) * 2 * Math.PI - Math.PI / 2;
+      const x = 100 + 80 * Math.cos(ang), y = 100 + 80 * Math.sin(ang);
+      badges += `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})" pointer-events="none"><circle r="11" fill="${catColor(r)}" stroke="var(--card)" stroke-width="2"/><svg x="-6.5" y="-6.5" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON_SVG[r.icon]}</svg></g>`;
+    }
+    off += len;
+    return s;
+  }).join('');
+  const center = sel
+    ? `<circle cx="100" cy="84" r="26" fill="${catColor(sel)}"/>
+       <svg x="86" y="70" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICON_SVG[sel.icon]}</svg>
+       <text x="100" y="128" text-anchor="middle" class="dn-name">${esc(sel.name)}</text>
+       <text x="100" y="146" text-anchor="middle" class="dn-total">${usd(sel.total)}</text>`
+    : `<text x="100" y="106" text-anchor="middle" class="dn-total">${usd(total)}</text>`;
+  return `<svg viewBox="0 0 200 200" class="donut" role="img" aria-label="Доли категорий">
+    <circle cx="100" cy="100" r="80" fill="none" stroke="var(--line)" stroke-width="22" opacity=".5"/>
+    ${segs}${badges}
+    <g data-act="donutSeg" data-v="" style="cursor:pointer">${center}</g>
+  </svg>`;
+}
+function toast(msg){
+  let t = document.getElementById('toast');
+  if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.hidden = false;
+  clearTimeout(t._h);
+  t._h = setTimeout(() => { t.hidden = true; }, 2800);
+}
+
+/* Календарь месяца в отчёте: в каждом дне расходы (красным) и доходы (зелёным) */
+function repCal(list){
+  const [y,m] = st.repCal.split('-').map(Number);
+  const first = (new Date(y,m-1,1).getDay() + 6) % 7;
+  const days = new Date(y,m,0).getDate();
+  const sums = {};
+  list.forEach(o => {
+    const s = sums[o.date] = sums[o.date] || {e: 0, i: 0};
+    if (o.type === 'expense') s.e += o.usd; else s.i += o.usd;
+  });
+  const cells = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(w => `<span class="wd">${w}</span>`);
+  for (let i = 0; i < first; i++) cells.push('<span></span>');
+  for (let d = 1; d <= days; d++) {
+    const key = `${y}-${pad(m)}-${pad(d)}`;
+    const s = sums[key];
+    cells.push(`<button data-act="repDay" data-v="${key}" aria-current="${key === st.date && st.mode === 'day'}"><span class="dnum">${d}</span>${s && s.e ? `<em class="neg">−${Math.round(s.e)} $</em>` : ''}${s && s.i ? `<em class="pos">+${Math.round(s.i)} $</em>` : ''}</button>`);
+  }
+  return `<div class="rcal">
+    <div class="rcal-head"><button class="nav" data-act="repCalStep" data-v="-1" aria-label="Месяц назад">‹</button><span>${MONTHS[m-1]} ${y}</span><button class="nav" data-act="repCalStep" data-v="1" aria-label="Месяц вперёд">›</button></div>
+    <div class="rcal-grid">${cells.join('')}</div>
+  </div>`;
+}
+
+function reportsView(listAll){
+  const list = st.tagF.length ? listAll.filter(o => o.tagId && st.tagF.includes(o.tagId)) : listAll;
+  const rows = catRows(list, st.repType, true);
+  const inc = sumUsd(list, 'income');
+  const exp = sumUsd(list, 'expense');
+  const filterBtn = `<button class="chip" data-act="openTagF" aria-pressed="${st.tagF.length > 0}">Фильтр по тегам${st.tagF.length ? ' · ' + st.tagF.length : ''}</button>`;
+  return `${periodBlock()}
+    <div class="chips" style="flex-wrap:wrap;overflow:visible">
+      <button class="chip" data-act="repType" data-v="expense" aria-pressed="${st.repType === 'expense'}">Расходы</button>
+      <button class="chip" data-act="repType" data-v="income" aria-pressed="${st.repType === 'income'}">Доходы</button>
+      ${filterBtn}${st.mode === 'month' ? '<button class="chip" data-act="openBudgets">Бюджеты</button>' : ''}
+    </div>
+    <div class="card donut-card">${donut(rows.data, rows.total)}<small class="center">${st.repType === 'expense' ? 'Всего расходов' : 'Всего доходов'}${st.tagF.length ? ' по выбранным тегам' : ''}</small>${st.mode === 'month' ? repCal(list) : ''}</div>
+    <h3>По категориям</h3>
+    ${rows.html}
+    <h3>Экспорт</h3>
+    <div class="card list">
+      <button class="op" data-act="exportPdf"><span class="op-main"><b>Скачать PDF</b><small>Операции и итоги за выбранный период</small></span></button>
+      <button class="op" data-act="exportXlsx"><span class="op-main"><b>Скачать Excel (.xlsx)</b><small>Все операции таблицей, удобно для нейросети и своих расчётов</small></span></button>
+    </div>
+    <p class="muted center" style="font-size:13px">Доходов за период: ${usd(inc)} · Расходов: ${usd(exp)}</p>`;
+}
+
+function chartSVG(){
+  const ref = st.mode === 'month' ? st.month : st.mode === 'year' ? `${st.year}-12` : st.date.slice(0,7);
+  const [ry, rm] = ref.split('-').map(Number);
+  const months = [5,4,3,2,1,0].map(k => { const t = new Date(ry, rm - 1 - k, 1); return `${t.getFullYear()}-${pad(t.getMonth()+1)}`; });
+  const data = months.map(m => {
+    const l = OPS.filter(o => o.date.startsWith(m));
+    return {inc: sumUsd(l, 'income'), exp: sumUsd(l, 'expense')};
+  });
   const max = Math.max(1, ...data.map(d => Math.max(d.inc, d.exp)));
   const W = 320, H = 150, gw = W / 6, bw = gw * 0.3;
-  return `<svg viewBox="0 0 ${W} ${H + 22}" class="chart">${data.map((d, i) => {
+  return `<svg viewBox="0 0 ${W} ${H + 22}" class="chart" role="img" aria-label="Доходы и расходы за 6 месяцев, в долларах">${data.map((d,i) => {
     const x = i * gw + gw * 0.15;
     const hi = d.inc / max * H, he = d.exp / max * H;
     return `<rect x="${x}" y="${H - hi}" width="${bw}" height="${hi}" rx="4" fill="var(--green)"/>
       <rect x="${x + bw + 3}" y="${H - he}" width="${bw}" height="${he}" rx="4" fill="var(--red)"/>
-      <text x="${x + bw}" y="${H + 16}" text-anchor="middle">${months[i].slice(5)}</text>`;
+      <text x="${x + bw}" y="${H + 16}" text-anchor="middle">${MONTHS[+months[i].slice(5)-1].slice(0,3)}</text>`;
   }).join('')}</svg>`;
 }
 
-const views = {
-  home(){
-    const bal = sumBy(db.ops.filter(o => o.type === 'income')) - sumBy(db.ops.filter(o => o.type === 'expense'));
-    const s = sums(month);
-    const totalExp = s.exp;
-    const pl = month.length === 10 ? 'за день' : 'за месяц';
-    const top = catTotals(month, 'expense').slice(0, 5);
-    const max = top[0] ? top[0].total : 1;
-    const last = [...db.ops].sort(byDateDesc).slice(0, 5);
-    return `${monthNav()}
-      <div class="card balance"><small>Баланс за всё время</small><b class="${bal < 0 ? 'neg' : ''}">${money(bal)}</b></div>
-      <div class="row2">
-        <div class="card"><small>Доходы ${pl}</small><b class="pos">${money(s.inc)}</b></div>
-        <div class="card"><small>Расходы ${pl}</small><b class="neg">${money(s.exp)}</b></div>
-      </div>
-      <h3>Топ категорий расходов</h3>
-      <div class="card">${top.length ? top.map(t => bar(t, max, totalExp)).join('') : '<p class="muted">Расходов за этот период пока нет</p>'}</div>
-      <h3>Последние операции</h3>
-      <div class="card list">${last.length ? last.map(opRow).join('') : '<p class="muted">Операций пока нет. Нажмите «+», чтобы добавить первую.</p>'}</div>`;
-  },
+function catsView(){
+  const list = CAT.filter(c => c.type === st.catType);
+  const rows = list.map(c => {
+    const n = OPS.filter(o => o.catId === c.id).length;
+    const t = tagsOf(c.id).length;
+    return `<button class="op" data-act="editCat" data-id="${c.id}">
+      ${ico(c.icon, '', c.color)}
+      <span class="op-main"><b>${esc(c.name)}</b><small>${n} операций · ${t} тегов</small></span>
+      <span class="op-edit">✎</span></button>`;
+  }).join('');
+  return `<div class="chips">
+      <button class="chip" data-act="catType" data-v="expense" aria-pressed="${st.catType === 'expense'}">Расходы</button>
+      <button class="chip" data-act="catType" data-v="income" aria-pressed="${st.catType === 'income'}">Доходы</button>
+    </div>
+    <div class="card list">${rows || '<p class="muted">Категорий нет</p>'}</div>
+    <button class="btn wide" data-act="addCat">+ Новая категория</button>`;
+}
 
-  ops(){
-    let list = opsOf(month);
-    if (opFilter !== 'all') list = list.filter(o => o.type === opFilter);
-    list = list.sort(opSort === 'amount' ? (a, b) => b.amount - a.amount : byDateDesc);
-    let body;
-    if (!list.length) body = '<p class="muted center">Операций за этот месяц нет</p>';
-    else if (opSort === 'amount') body = `<div class="card list">${list.map(opRow).join('')}</div>`;
-    else {
-      const groups = {};
-      list.forEach(o => { (groups[o.date] = groups[o.date] || []).push(o); });
-      body = Object.keys(groups).map(d => {
-        const g = groups[d];
-        const net = sumBy(g.filter(o => o.type === 'income')) - sumBy(g.filter(o => o.type === 'expense'));
-        return `<div class="day"><span>${fmtDate(d)}</span><span>${money(net)}</span></div>
-          <div class="card list">${g.map(opRow).join('')}</div>`;
-      }).join('');
-    }
-    return `${monthNav()}
-      <div class="chips">${chip('all','Все','setFilter',opFilter)}${chip('expense','Расходы','setFilter',opFilter)}${chip('income','Доходы','setFilter',opFilter)}</div>
-      <div class="chips">${chip('date','По дате','setSort',opSort)}${chip('amount','По сумме','setSort',opSort)}</div>
-      ${body}`;
-  },
-
-  reports(){
-    const s = sums(month);
-    const list = catTotals(month, repType);
-    const total = list.reduce((a, t) => a + t.total, 0);
-    const max = list[0] ? list[0].total : 1;
-    return `${monthNav()}
-      <div class="chips">${chip('expense','Расходы','setRepType',repType)}${chip('income','Доходы','setRepType',repType)}</div>
-      <div class="card center"><small>${repType === 'expense' ? 'Всего расходов' : 'Всего доходов'}</small><b class="big">${money(total)}</b></div>
-      <h3>По категориям</h3>
-      <div class="card">${list.length ? list.map(t => bar(t, max, total)).join('') : '<p class="muted">Нет данных за этот месяц</p>'}</div>
-      <h3>Последние 6 месяцев</h3>
-      <div class="card">${chart()}
-        <div class="legend"><i style="background:var(--green)"></i>доходы<i style="background:var(--red)"></i>расходы</div>
-      </div>
-      <p class="muted small center">Доходов за месяц: ${money(s.inc)} · Расходов: ${money(s.exp)}</p>`;
-  },
-
-  cats(){
-    const list = db.cats.filter(c => c.type === catType);
-    const rows = list.map(c => {
-      const n = db.ops.filter(o => o.catId === c.id).length;
-      return `<button class="op" data-act="editCat" data-id="${c.id}">
-        <i class="dot big" style="background:${c.color}"></i>
-        <span class="op-main"><b>${esc(c.name)}</b><small>${n} операций</small></span>
-        <span class="muted">✎</span></button>`;
-    }).join('');
-    return `<div class="chips">${chip('expense','Расходы','setCatType',catType)}${chip('income','Доходы','setCatType',catType)}</div>
-      <div class="card list">${rows || '<p class="muted">Категорий нет</p>'}</div>
-      <button class="btn wide" data-act="addCat">+ Новая категория</button>`;
-  },
-
-  settings(){
-    return `<div class="card">
-        <label class="field">Валюта
-          <input id="cur" value="${esc(db.currency)}" maxlength="5">
-        </label>
-      </div>
-      <div class="card list">
-        <button class="op" data-act="exportData"><span class="op-main"><b>Сохранить резервную копию</b><small>Файл с вашими данными</small></span></button>
-        <label class="op"><span class="op-main"><b>Загрузить резервную копию</b><small>Выбрать файл из сохранённых</small></span>
-          <input type="file" id="imp" accept="application/json,.json" hidden></label>
-        <button class="op" data-act="reset"><span class="op-main"><b class="neg">Стереть всё</b><small>Удалить все операции и категории</small></span></button>
-      </div>
-      <p class="muted small">Данные хранятся только в этом телефоне и браузере. Делайте резервную копию, если меняете телефон.</p>`;
+function settingsView(){
+  const ratesRows = CUR.map(c => `<div class="rate-row">
+        <span><b style="font-weight:500">${c.sym} ${c.code}</b><small>${c.code === 'USD' ? 'основная валюта' : 'сколько $ в 1 ' + c.code}</small></span>
+        <b style="font-variant-numeric:tabular-nums">${c.code === 'USD' ? '1' : fmtNum(c.rate)}</b>
+      </div>`).join('');
+  return `<h3>Валюты и курсы</h3>
+    <div class="card list">
+      ${ratesRows}
+      <button class="op" data-act="addCur"><span class="op-main"><b style="color:var(--accent)">+ Добавить валюту</b><small>Код, знак и курс к доллару</small></span></button>
+    </div>
+    <p class="muted" style="font-size:12px;margin:6px 4px 0" id="rates-date">Курсы обновляются при открытии приложения, когда есть интернет.</p>
+    <p class="muted" style="font-size:12px;margin:4px 4px 0">Курсы: <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener" style="color:var(--accent)">Rates By Exchange Rate API</a></p>
+    <h3>Фон</h3>
+    <div class="card list">
+      <button class="op" data-act="toggleBg"><span class="op-main"><b>Анимация фона</b><small>Мерцающие точки. Выключите, чтобы экономить заряд.</small></span><i class="switch" aria-pressed="${bgOn}"></i></button>
+    </div>
+    <h3>Бюджеты</h3>
+    <div class="card list">
+      <button class="op" data-act="toggleBud"><span class="op-main"><b>Показывать бюджеты</b><small>Строки и полоски в отчётах за месяц. Суммы бюджетов сохраняются.</small></span><i class="switch" aria-pressed="${st.showBudgets}"></i></button>
+    </div>
+    <h3>Как это работает</h3>
+    <div class="card">
+      <ul class="how">
+        <li>Все суммы и итоги показываются в <b>долларах</b>, в формате «число $».</li>
+        <li>Сумму вводите в той валюте, в которой платили. Валюту выбираете справа от суммы.</li>
+        <li>Сумма переводится в доллары по курсу. Курс сохраняется в операцию, поэтому старые операции не меняются, когда курс обновляется.</li>
+        <li>Категория — это общая группа. Тег относится к своей категории и выбирается в операции.</li>
+        <li>Баланс = доходы минус расходы за выбранный период.</li>
+      </ul>
+    </div>
+    <h3>Фото</h3>
+    <div class="card list">
+      <div class="op"><span class="op-main"><b>Фото в операциях</b><small id="ph-stats">считаю…</small></span></div>
+    </div>
+    <h3>Данные</h3>
+    <div class="card list">
+      <button class="op" data-act="backup"><span class="op-main"><b>Сохранить резервную копию</b><small>Файл JSON: операции, категории, теги, бюджеты. Фото в него не входят.</small></span></button>
+      <label class="op"><span class="op-main"><b>Загрузить резервную копию</b><small>Выбрать файл из сохранённых</small></span>
+        <input type="file" id="imp" accept="application/json,.json" hidden></label>
+      <button class="op" data-act="reset"><span class="op-main"><b class="neg">Стереть все операции</b><small>Категории и теги останутся. Фото тоже удалятся.</small></span></button>
+    </div>
+    <p class="muted" style="font-size:13px;min-height:18px">Данные хранятся только в этом телефоне и браузере. Делайте резервную копию, если меняете телефон.</p>`;
+}
+async function fillSettingsInfo(){
+  const el = document.getElementById('ph-stats');
+  if (el) {
+    const s = await phStats();
+    el.textContent = `${s.n} фото · ${(s.bytes / 1048576).toFixed(1)} МБ на телефоне`;
   }
-};
+  const r = document.getElementById('rates-date');
+  if (r && RATES_DATE) r.textContent = `Курсы на ${new Date(RATES_DATE).toLocaleString('ru-RU', {day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'})}`;
+}
 
+/* ---------- Отрисовка ---------- */
 function render(){
-  view.innerHTML = views[tab]();
-  document.querySelectorAll('.tabs [data-act="tab"]').forEach(b => b.classList.toggle('on', b.dataset.v === tab));
-  document.querySelector('header .gear').classList.toggle('on', tab === 'settings');
+  saveState();
+  const list = OPS.filter(inPeriod);
+  const views = {
+    home: () => homeView(list),
+    ops: () => opsView(list),
+    reports: () => reportsView(list),
+    cats: catsView,
+    settings: settingsView
+  };
+  document.getElementById('view').innerHTML = views[st.view]();
+  if (st.view === 'settings') fillSettingsInfo();
+  document.querySelectorAll('.tabs [data-act="tab"]').forEach(b => {
+    if (b.dataset.v === st.view) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
+  });
+  const gear = document.getElementById('gear');
+  if (st.view === 'settings') gear.setAttribute('aria-current','page'); else gear.removeAttribute('aria-current');
 }
 
-/* ---------- Нижние окна (sheet) ---------- */
-function sheet(html){ $('#sheet-body').innerHTML = html; $('#sheet').classList.add('open'); }
-function closeSheet(){ $('#sheet').classList.remove('open'); editId = null; catEdit = null; }
+/* ---------- Нижние окна ---------- */
+function openSheet(html){ document.getElementById('sheet-body').innerHTML = html; document.getElementById('sheet').hidden = false; }
+function closeSheet(){ document.getElementById('sheet').hidden = true; }
 
-function readDraft(){
-  if (!$('#f-amount')) return;
-  draft.amount = $('#f-amount').value;
-  draft.catId = $('#f-cat').value;
-  draft.date = $('#f-date').value;
-  draft.note = $('#f-note').value;
+function drawCal(){
+  const [y,m] = st.calMonth.split('-').map(Number);
+  const first = (new Date(y,m-1,1).getDay() + 6) % 7;
+  const days = new Date(y,m,0).getDate();
+  const cells = [];
+  for (let i = 0; i < first; i++) cells.push('<span></span>');
+  for (let d = 1; d <= days; d++) {
+    const v = `${y}-${pad(m)}-${pad(d)}`;
+    cells.push(`<button data-act="pickDay" data-v="${v}" aria-current="${v === st.date}">${d}</button>`);
+  }
+  openSheet(`
+    <div class="sheet-head">
+      <button class="nav" data-act="calStep" data-v="-1" aria-label="Месяц назад">‹</button>
+      <h2>${MONTHS[m-1]} ${y}</h2>
+      <button class="nav" data-act="calStep" data-v="1" aria-label="Месяц вперёд">›</button>
+    </div>
+    <div class="cal">${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(w => `<span class="wd">${w}</span>`).join('')}${cells.join('')}</div>
+    <p class="muted center" style="margin:12px 0 0;font-size:13px">Нажмите день. Баланс посчитается за этот день.</p>`);
 }
-function openOp(id){
-  const op = id ? db.ops.find(o => o.id === id) : null;
-  editId = id || null;
-  draft = op ? {...op} : {type:'expense', amount:'', catId:'', date:todayISO(), note:''};
-  drawOp();
+function drawMonthSheet(){
+  const cur = st.month;
+  openSheet(`
+    <div class="sheet-head">
+      <button class="nav" data-act="yearStep" data-v="-1" aria-label="Год назад">‹</button>
+      <h2>${st.pickYear}</h2>
+      <button class="nav" data-act="yearStep" data-v="1" aria-label="Год вперёд">›</button>
+    </div>
+    <div class="grid">${MONTHS.map((m,i) => {
+      const v = `${st.pickYear}-${pad(i+1)}`;
+      return `<button data-act="pickMonth" data-v="${v}" aria-current="${v === cur}">${m.slice(0,3)}</button>`;
+    }).join('')}</div>`);
 }
-function drawOp(){
-  const list = db.cats.filter(c => c.type === draft.type);
-  if (!list.some(c => c.id === draft.catId)) draft.catId = list[0] ? list[0].id : '';
-  sheet(`<div class="sheet-head">
-      <button class="btn ghost" data-act="closeSheet">Отмена</button>
-      <h2>${editId ? 'Операция' : 'Новая операция'}</h2>
+function drawYearSheet(){
+  openSheet(`
+    <div class="sheet-head"><h2>Выберите год</h2></div>
+    <div class="grid">${[2024,2025,2026,2027].map(y => `<button data-act="pickYear" data-v="${y}" aria-current="${y === st.year}">${y}</button>`).join('')}</div>`);
+}
+
+/* Фильтр по тегам: одно окно для Операций и Отчётов, теги сгруппированы по категориям */
+function tagFArr(){ return st.tagFTarget === 'ops' ? st.opTagF : st.tagF; }
+function drawTagFilter(){
+  const sel = tagFArr();
+  const groups = CAT.filter(c => tagsOf(c.id).length).map(c =>`
+    <div class="tagfgroup">${esc(c.name)}</div>
+    <div class="chips" style="flex-wrap:wrap">${tagsOf(c.id).map(t => `<button class="chip" data-act="toggleTagF" data-v="${t.id}" aria-pressed="${sel.includes(t.id)}"># ${esc(t.name)}</button>`).join('')}</div>`).join('');
+  openSheet(`
+    <div class="sheet-head">
+      <button class="btn ghost" data-act="clearTagF">Сбросить</button>
+      <h2>Теги</h2>
+      <button class="btn" data-act="closeTagF">Готово</button>
+    </div>
+    <p class="muted" style="font-size:13px;margin:0 0 4px">Выберите теги, и отчёт покажет траты только по ним.</p>
+    ${groups || '<p class="muted">Тегов пока нет</p>'}`);
+}
+
+function renderTagChips(){
+  const box = document.getElementById('f-tags');
+  if (!box) return;
+  const catId = document.getElementById('f-cat').value;
+  const list = tagsOf(catId);
+  box.innerHTML = list.map(t => `<button class="chip" data-act="pickTag" data-v="${t.id}" aria-pressed="${st.draftTag === t.id}"># ${esc(t.name)}</button>`).join('');
+  if (!list.length) box.insertAdjacentHTML('afterend', '');
+}
+function updateHint(){
+  const h = document.getElementById('f-hint');
+  if (!h) return;
+  const c = curOf(document.getElementById('f-cur').value);
+  const amt = parseFloat((document.getElementById('f-amount').value || '').replace(',', '.'));
+  if (c.code === 'USD') h.textContent = 'Доллары, пересчёт не нужен';
+  else if (amt > 0) h.textContent = `≈ ${usd(Math.round(amt * c.rate * 100) / 100)} по курсу 1 ${c.code} = ${c.rate} $`;
+  else h.textContent = `Курс 1 ${c.code} = ${c.rate} $ (из «Валюты и курсы»)`;
+}
+
+function updateDateLabel(){
+  const el = document.getElementById('f-datelabel');
+  const v = document.getElementById('f-date').value;
+  if (!el || !v) return;
+  const [y,m,d] = v.split('-');
+  el.textContent = `${d}.${m}.${y}` + (v === '2026-10-27' ? ' · сегодня' : '');
+}
+function drawOp(id){
+  const op = id ? OPS.find(o => o.id === id) : null;
+  st.editOp = op ? op.id : null;
+  if (op) { st.draftType = op.type; st.draftCur = op.cur; st.draftTag = op.tagId; }
+  else st.draftTag = null;
+  st.draftPhotos = op ? [...(op.photos || [])] : [];
+  const list = CAT.filter(c => c.type === st.draftType);
+  const selected = op ? op.catId : list[0].id;
+  openSheet(`
+    <div class="sheet-head">
+      <button class="btn ghost" data-act="cancelOp">Отмена</button>
+      <h2>${op ? 'Операция' : 'Новая операция'}</h2>
       <button class="btn" data-act="saveOp">Готово</button>
     </div>
-    <div class="chips">${chip('expense','Расход','setDraftType',draft.type)}${chip('income','Доход','setDraftType',draft.type)}</div>
-    <label class="field">Сумма
-      <input id="f-amount" inputmode="decimal" placeholder="0" value="${esc(draft.amount)}">
+    <div class="chips" style="justify-content:center">
+      <button class="chip" data-act="draftType" data-v="expense" aria-pressed="${st.draftType === 'expense'}">Расход</button>
+      <button class="chip" data-act="draftType" data-v="income" aria-pressed="${st.draftType === 'income'}">Доход</button>
+    </div>
+    <div class="amt-big">
+      <input id="f-amount" inputmode="decimal" placeholder="0" value="${op ? op.amount : ''}" aria-label="Сумма">
+      <select id="f-cur" class="cur-pill" aria-label="Валюта">${CUR.map(c => `<option value="${c.code}" ${c.code === st.draftCur ? 'selected' : ''}>${c.code}</option>`).join('')}</select>
+    </div>
+    <p class="hint center" id="f-hint"></p>
+    <div class="cats-grid">
+      ${list.map(c => `<button class="cat-tile" data-act="pickCat" data-v="${c.id}" aria-pressed="${c.id === selected}">${ico(c.icon, 'lg', c.color)}<span>${esc(c.name)}</span></button>`).join('')}
+      <button class="cat-tile" data-act="addCat"><span class="ico lg" style="background:var(--chip)"><svg viewBox="0 0 24 24" aria-hidden="true" style="stroke:var(--text)"><path d="M12 6v12M6 12h12"/></svg></span><span>Новая</span></button>
+    </div>
+    <input type="hidden" id="f-cat" value="${selected}">
+    <label class="daterow">
+      <span id="f-datelabel"></span>
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+      <input type="date" id="f-date" value="${op ? op.date : st.date}" aria-label="Дата">
     </label>
-    <label class="field">Категория
-      <select id="f-cat">${list.map(c => `<option value="${c.id}" ${c.id === draft.catId ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
-    </label>
-    <label class="field">Дата
-      <input id="f-date" type="date" value="${draft.date}">
-    </label>
-    <label class="field">Заметка
-      <input id="f-note" value="${esc(draft.note)}" placeholder="Необязательно">
-    </label>
-    ${editId ? '<button class="btn danger wide" data-act="delOp">Удалить операцию</button>' : ''}`);
+    <h3>Теги</h3>
+    <div class="chips" id="f-tags"></div>
+    <label class="field">Заметка<input id="f-note" value="${esc(op ? op.note : '')}" placeholder="Необязательно"></label>
+    <div class="field">Фото <span style="font-size:12px">(сжимаются при добавлении, ~200 КБ каждое)</span></div>
+    <div class="photos" id="f-photos"></div>
+    <input type="file" id="f-files" accept="image/*" multiple style="margin-bottom:12px">
+    <p class="err" id="f-err"></p>
+    ${op ? '<button class="btn danger wide" data-act="delOp">Удалить операцию</button>' : ''}`);
+  renderTagChips();
+  renderPhotos();
+  updateHint();
+  updateDateLabel();
+}
+function draftTypeSwitch(v){
+  const keep = {
+    amount: document.getElementById('f-amount').value,
+    cur: document.getElementById('f-cur').value,
+    note: document.getElementById('f-note').value,
+    date: document.getElementById('f-date').value,
+    photos: st.draftPhotos
+  };
+  st.draftType = v;
+  st.draftCur = keep.cur;
+  st.draftTag = null;
+  drawOp(st.editOp);
+  document.getElementById('f-amount').value = keep.amount;
+  document.getElementById('f-cur').value = keep.cur;
+  document.getElementById('f-note').value = keep.note;
+  document.getElementById('f-date').value = keep.date;
+  st.draftPhotos = keep.photos;
+  renderPhotos();
+  updateHint();
+  updateDateLabel();
 }
 function saveOp(){
-  readDraft();
-  const amt = parseFloat(String(draft.amount).replace(',', '.'));
-  if (!(amt > 0)) return alert('Введите сумму больше нуля');
-  if (!draft.catId) return alert('Сначала создайте категорию этого типа');
-  const rec = {id: editId || uid(), type: draft.type, amount: Math.round(amt * 100) / 100,
-    catId: draft.catId, date: draft.date || todayISO(), note: (draft.note || '').trim()};
-  const i = db.ops.findIndex(o => o.id === editId);
-  if (i >= 0) db.ops[i] = rec; else db.ops.push(rec);
-  save(); closeSheet(); render();
+  const amt = parseFloat(document.getElementById('f-amount').value.replace(',', '.'));
+  const err = document.getElementById('f-err');
+  if (!(amt > 0)) { err.textContent = 'Введите сумму больше нуля'; return; }
+  const c = curOf(document.getElementById('f-cur').value);
+  const rec = {
+    type: st.draftType,
+    catId: document.getElementById('f-cat').value,
+    tagId: st.draftTag,
+    amount: Math.round(amt * 100) / 100,
+    cur: c.code,
+    rate: c.rate,
+    usd: Math.round(amt * c.rate * 100) / 100,
+    date: document.getElementById('f-date').value || st.date,
+    note: document.getElementById('f-note').value.trim(),
+    photos: [...st.draftPhotos]
+  };
+  const before = st.editOp ? (OPS.find(o => o.id === st.editOp)?.photos || []) : [];
+  before.filter(id => !rec.photos.includes(id)).forEach(phDel);
+  if (st.editOp) Object.assign(OPS.find(o => o.id === st.editOp), rec);
+  else OPS.push({id: ++idc, ...rec});
+  closeSheet(); render();
 }
 function delOp(){
-  if (!confirm('Удалить операцию?')) return;
-  db.ops = db.ops.filter(o => o.id !== editId);
-  save(); closeSheet(); render();
+  (OPS.find(o => o.id === st.editOp)?.photos || []).forEach(phDel);
+  OPS = OPS.filter(o => o.id !== st.editOp);
+  closeSheet(); render();
 }
 
-function openCat(id){
-  const c = id ? db.cats.find(x => x.id === id) : {name:'', color:'#6c8cff', type: catType};
-  catEdit = id || null;
-  sheet(`<div class="sheet-head">
+/* Карточка категории: название, тип, значок и теги */
+function drawCat(id){
+  const c = id ? CAT.find(x => x.id === id) : {name:'', icon:'other', type: st.catType};
+  st.editCat = id || null;
+  st.catDraftId = id || ('c' + (++idc));
+  st.catIcon = c.icon;
+  st.catColor = catColor(c);
+  st.catColorTouched = false;
+  st.catTags = (id ? tagsOf(id) : []).map(t => ({...t}));
+  renderCatSheet(c);
+}
+function renderCatSheet(c){
+  openSheet(`
+    <div class="sheet-head">
       <button class="btn ghost" data-act="closeSheet">Отмена</button>
-      <h2>${id ? 'Категория' : 'Новая категория'}</h2>
+      <h2>${st.editCat ? 'Категория' : 'Новая категория'}</h2>
       <button class="btn" data-act="saveCat">Готово</button>
     </div>
     <label class="field">Название<input id="c-name" value="${esc(c.name)}"></label>
-    <label class="field">Цвет<input id="c-color" type="color" value="${c.color}"></label>
-    <label class="field">Тип
-      <select id="c-type">
-        <option value="expense" ${c.type === 'expense' ? 'selected' : ''}>Расход</option>
-        <option value="income" ${c.type === 'income' ? 'selected' : ''}>Доход</option>
-      </select>
-    </label>
-    ${id ? '<button class="btn danger wide" data-act="delCat">Удалить категорию</button>' : ''}`);
+    <label class="field">Тип<select id="c-type"><option value="expense" ${c.type === 'expense' ? 'selected' : ''}>Расход</option><option value="income" ${c.type === 'income' ? 'selected' : ''}>Доход</option></select></label>
+    <div class="field">Цвет и значок</div>
+    <div class="cat-preview" id="cat-preview">${ico(st.catIcon, 'lg', st.catColor)}</div>
+    <div class="swatches">${COLORS.map(c => `<button data-act="pickColor" data-v="${c}" aria-pressed="${c === st.catColor}" aria-label="Цвет ${c}" style="background:${c}"></button>`).join('')}</div>
+    <div class="field">Значок</div>
+    ${ICON_GROUPS.map(g => `<div class="field" style="margin:6px 0 6px">${g.title}</div>
+    <div class="icons">${g.keys.map(k => `<button data-act="pickIcon" data-v="${k}" aria-current="${k === st.catIcon}" aria-label="Значок">${ico(k)}</button>`).join('')}</div>`).join('')}
+    <div class="field">Теги</div>
+    <div class="card list taglist">${st.catTags.length ? st.catTags.map(t => `
+      <div class="trow"><span class="hash">#</span><span class="tname">${esc(t.name)}</span><button class="del" data-act="delTag" data-v="${t.id}" aria-label="Удалить тег">✕</button></div>`).join('') : '<p class="muted" style="padding:10px 0;margin:0">Тегов пока нет</p>'}</div>
+    <div class="addtag">
+      <input id="t-name" placeholder="Например, Лекарства">
+      <button data-act="addTag">Добавить</button>
+    </div>
+    <p class="err" id="c-err"></p>
+    ${st.editCat ? '<button class="btn danger wide" data-act="askDelCat">Удалить категорию</button>' : ''}`);
+}
+/* Цвет категории: по умолчанию цвет группы значка, потом можно выбрать свой */
+const COLORS = ['#7fae52','#e0484c','#d0628f','#c95c8c','#9db38f','#4a72c4','#e0483e','#4a7fd0','#8a8a8a','#5fb8a6','#e0a83a','#26c6da','#a77bff','#c9875a','#ff6b9a','#2f3b52'];
+function updatePreview(){
+  const p = document.getElementById('cat-preview');
+  if (p) p.innerHTML = ico(st.catIcon, 'lg', st.catColor);
+}
+function pickColor(el){
+  st.catColor = el.dataset.v;
+  st.catColorTouched = true;
+  document.querySelectorAll('.swatches button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === st.catColor)));
+  updatePreview();
+}
+function pickIcon(el){
+  st.catIcon = el.dataset.v;
+  if (!st.catColorTouched) st.catColor = ICON_COLOR[st.catIcon];
+  updatePreview();
+  document.querySelectorAll('.icons button').forEach(b => b.setAttribute('aria-current', String(b.dataset.v === st.catIcon)));
+}
+function addTag(){
+  const input = document.getElementById('t-name');
+  const name = input.value.trim();
+  if (!name) return;
+  if (st.catTags.some(t => t.name.toLowerCase() === name.toLowerCase())) { document.getElementById('c-err').textContent = 'Такой тег уже есть'; return; }
+  st.catTags.push({id: 't' + (++idc), name, catId: st.catDraftId});
+  renderCatSheet(readCatForm());
+}
+function delTag(el){
+  st.catTags = st.catTags.filter(t => t.id !== el.dataset.v);
+  renderCatSheet(readCatForm());
+}
+function readCatForm(){
+  return {name: document.getElementById('c-name').value, type: document.getElementById('c-type').value, icon: st.catIcon, color: st.catColor};
 }
 function saveCat(){
-  const name = $('#c-name').value.trim();
-  if (!name) return alert('Введите название');
-  const data = {name, color: $('#c-color').value, type: $('#c-type').value};
-  if (catEdit) Object.assign(db.cats.find(x => x.id === catEdit), data);
-  else db.cats.push({id: uid(), ...data});
-  save(); closeSheet(); render();
+  const data = readCatForm();
+  data.name = data.name.trim();
+  if (!data.name) { document.getElementById('c-err').textContent = 'Введите название'; return; }
+  const catId = st.catDraftId;
+  if (st.editCat) Object.assign(CAT.find(x => x.id === st.editCat), data);
+  else CAT.push({id: catId, ...data});
+  const keep = new Set(st.catTags.map(t => t.id));
+  TAGS = TAGS.filter(t => t.catId !== catId);
+  st.catTags.forEach(t => TAGS.push({...t, catId}));
+  OPS.forEach(o => { if (o.tagId && !keep.has(o.tagId) && o.catId === catId) o.tagId = null; });
+  closeSheet(); render();
 }
-function delCat(){
-  const c = db.cats.find(x => x.id === catEdit);
-  const others = db.cats.filter(x => x.id !== c.id && x.type === c.type);
-  if (!others.length) return alert('Сначала создайте другую категорию такого же типа');
-  sheet(`<h2>Удалить «${esc(c.name)}»</h2>
-    <p class="muted">Её операции перенесём в выбранную категорию:</p>
-    <label class="field">Перенести в
-      <select id="d-to">${others.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select>
-    </label>
+function askDelCat(){
+  const c = CAT.find(x => x.id === st.editCat);
+  const others = CAT.filter(x => x.id !== c.id && x.type === c.type);
+  if (!others.length) { document.getElementById('c-err').textContent = 'Сначала создайте другую категорию такого же типа'; return; }
+  openSheet(`
+    <div class="sheet-head"><h2>Удалить «${esc(c.name)}»</h2></div>
+    <p class="muted">Её операции перенесём в выбранную категорию. Теги категории удалятся.</p>
+    <label class="field">Перенести в<select id="d-to">${others.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select></label>
     <button class="btn danger wide" data-act="confirmDelCat">Удалить</button>
     <button class="btn ghost wide" data-act="closeSheet">Отмена</button>`);
 }
 function confirmDelCat(){
-  const to = $('#d-to').value;
-  db.ops.forEach(o => { if (o.catId === catEdit) o.catId = to; });
-  db.cats = db.cats.filter(x => x.id !== catEdit);
-  save(); closeSheet(); render();
+  const to = document.getElementById('d-to').value;
+  OPS.forEach(o => { if (o.catId === st.editCat) { o.catId = to; o.tagId = null; } });
+  TAGS = TAGS.filter(t => t.catId !== st.editCat);
+  CAT = CAT.filter(x => x.id !== st.editCat);
+  closeSheet(); render();
 }
 
-/* ---------- Резервная копия ---------- */
-function exportData(){
-  const blob = new Blob([JSON.stringify(db, null, 2)], {type: 'application/json'});
+function drawCurSheet(){
+  openSheet(`
+    <div class="sheet-head">
+      <button class="btn ghost" data-act="closeSheet">Отмена</button>
+      <h2>Новая валюта</h2>
+      <button class="btn" data-act="saveCur">Готово</button>
+    </div>
+    <label class="field">Код валюты<input id="k-code" maxlength="4" placeholder="например PLN"></label>
+    <label class="field">Знак<input id="k-sym" maxlength="3" placeholder="например zł"></label>
+    <label class="field">Сколько $ в одной единице<input id="k-rate" inputmode="decimal" placeholder="например 0.25"></label>
+    <p class="err" id="k-err"></p>`);
+}
+function saveCur(){
+  const code = document.getElementById('k-code').value.trim().toUpperCase();
+  const sym = document.getElementById('k-sym').value.trim() || code;
+  const rate = parseFloat(document.getElementById('k-rate').value.replace(',', '.'));
+  const err = document.getElementById('k-err');
+  if (!code) { err.textContent = 'Введите код валюты'; return; }
+  if (CUR.some(c => c.code === code)) { err.textContent = 'Такая валюта уже есть'; return; }
+  if (!(rate > 0)) { err.textContent = 'Введите курс больше нуля'; return; }
+  CUR.push({code, sym, rate});
+  closeSheet(); render();
+}
+
+/* ---------- Фото: хранятся на телефоне (IndexedDB), сжимаются при добавлении ---------- */
+const PH_DB = 'finance-photos';
+function phOpen(){
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(PH_DB, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('p');
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function phPut(id, blob){
+  const db = await phOpen();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('p', 'readwrite');
+    tx.objectStore('p').put(blob, id);
+    tx.oncomplete = () => res();
+    tx.onerror = () => rej(tx.error);
+  });
+}
+async function phGet(id){
+  const db = await phOpen();
+  return new Promise((res, rej) => {
+    const q = db.transaction('p').objectStore('p').get(id);
+    q.onsuccess = () => res(q.result || null);
+    q.onerror = () => rej(q.error);
+  });
+}
+async function phDel(id){
+  const db = await phOpen();
+  db.transaction('p', 'readwrite').objectStore('p').delete(id);
+}
+async function phStats(){
+  const db = await phOpen();
+  return new Promise(res => {
+    let n = 0, bytes = 0;
+    const c = db.transaction('p').objectStore('p').openCursor();
+    c.onsuccess = () => {
+      const cur = c.result;
+      if (cur) { n++; bytes += cur.value.size || 0; cur.continue(); }
+      else res({n, bytes});
+    };
+  });
+}
+/* Фото без операции (после отмены или сбоя) удаляем при запуске */
+async function phCleanup(){
+  const used = new Set(OPS.flatMap(o => o.photos || []).concat(st.draftPhotos));
+  const db = await phOpen();
+  const keys = await new Promise(res => {
+    const q = db.transaction('p').objectStore('p').getAllKeys();
+    q.onsuccess = () => res(q.result);
+  });
+  keys.filter(k => !used.has(k)).forEach(phDel);
+}
+/* Длинная сторона до 1280 px, JPEG 70%: примерно 150–250 КБ на фото */
+async function compressPhoto(file){
+  const img = await createImageBitmap(file);
+  const k = Math.min(1, 1280 / Math.max(img.width, img.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(img.width * k);
+  c.height = Math.round(img.height * k);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  return new Promise(res => c.toBlob(res, 'image/jpeg', .7));
+}
+async function addFiles(input){
+  for (const f of input.files) {
+    const blob = await compressPhoto(f);
+    const id = 'ph' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    await phPut(id, blob);
+    st.draftPhotos.push(id);
+  }
+  input.value = '';
+  renderPhotos();
+}
+async function renderPhotos(){
+  const box = document.getElementById('f-photos');
+  if (!box) return;
+  const urls = await Promise.all(st.draftPhotos.map(async id => {
+    const b = await phGet(id);
+    return b ? URL.createObjectURL(b) : '';
+  }));
+  box.innerHTML = urls.map((u, i) => `<div style="background-image:url('${u}')"><button data-act="delPhoto" data-v="${i}" aria-label="Удалить фото">✕</button></div>`).join('');
+}
+function delPhoto(el){ st.draftPhotos.splice(Number(el.dataset.v), 1); renderPhotos(); }
+function cancelOp(){
+  const orig = st.editOp ? (OPS.find(o => o.id === st.editOp)?.photos || []) : [];
+  st.draftPhotos.filter(id => !orig.includes(id)).forEach(phDel);
+  st.draftPhotos = [];
+  closeSheet();
+}
+
+/* ---------- Курсы: обновляются, когда есть интернет; без сети остаются последние ---------- */
+let RATES_DATE = null;
+async function refreshRates(){
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    const d = await res.json();
+    if (d.result !== 'success') return;
+    CUR.forEach(c => { const v = d.rates[c.code]; if (c.code !== 'USD' && v) c.rate = +(1 / v).toFixed(6); });
+    RATES_DATE = d.time_last_update_utc;
+    render();
+  } catch (e) { /* нет связи: работаем по последним курсам */ }
+}
+
+/* ---------- Файлы: download, Excel (.xlsx) и PDF через печать ---------- */
+function download(blob, name){
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `finance-backup-${todayISO()}.json`;
+  a.download = name;
   document.body.appendChild(a);
   a.click();
   a.remove();
 }
-function importFile(f){
+const CRC_T = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(u8){
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < u8.length; i++) c = CRC_T[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+/* Минимальный zip без сжатия: достаточно для .xlsx */
+function zipFiles(files, mime){
+  const enc = new TextEncoder();
+  const parts = [], central = [];
+  let offset = 0;
+  files.forEach(f => {
+    const name = enc.encode(f.name), crc = crc32(f.data), size = f.data.length;
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true);
+    lh.setUint16(8, 0, true); lh.setUint16(10, 0, true); lh.setUint16(12, 0x21, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, size, true); lh.setUint32(22, size, true);
+    lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    parts.push(new Uint8Array(lh.buffer), name, f.data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true);
+    ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true); ch.setUint16(12, 0, true);
+    ch.setUint16(14, 0x21, true); ch.setUint32(16, crc, true); ch.setUint32(20, size, true);
+    ch.setUint32(24, size, true); ch.setUint16(28, name.length, true); ch.setUint16(30, 0, true);
+    ch.setUint16(32, 0, true); ch.setUint16(34, 0, true); ch.setUint16(36, 0, true);
+    ch.setUint32(38, 0, true); ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), name);
+    offset += 30 + name.length + size;
+  });
+  const cdSize = central.reduce((a, b) => a + b.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(4, 0, true); end.setUint16(6, 0, true);
+  end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, offset, true); end.setUint16(20, 0, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], {type: mime});
+}
+function xlsxBlob(header, rows, numCols){
+  const L = 'ABCDEFGHIJ';
+  const cell = (v, ref, num) => typeof v === 'number' && num
+    ? `<c r="${ref}"><v>${v}</v></c>`
+    : `<c r="${ref}" t="inlineStr"><is><t>${esc(String(v ?? ''))}</t></is></c>`;
+  const all = [header, ...rows];
+  const sheetRows = all.map((r, i) => `<row r="${i + 1}">${r.map((v, j) => cell(v, L[j] + (i + 1), numCols.includes(j))).join('')}</row>`).join('');
+  const NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+  const RS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const enc = s => new TextEncoder().encode(s);
+  return zipFiles([
+    {name: '[Content_Types].xml', data: enc(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`)},
+    {name: '_rels/.rels', data: enc(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${RS}/officeDocument" Target="xl/workbook.xml"/></Relationships>`)},
+    {name: 'xl/workbook.xml', data: enc(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="${NS}" xmlns:r="${RS}"><sheets><sheet name="Операции" sheetId="1" r:id="rId1"/></sheets></workbook>`)},
+    {name: 'xl/_rels/workbook.xml.rels', data: enc(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${RS}/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`)},
+    {name: 'xl/worksheets/sheet1.xml', data: enc(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="${NS}"><sheetData>${sheetRows}</sheetData></worksheet>`)}
+  ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+}
+function printHtml(html){
+  const f = document.createElement('iframe');
+  f.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0';
+  document.body.appendChild(f);
+  f.onload = () => { f.contentWindow.focus(); f.contentWindow.print(); setTimeout(() => f.remove(), 60000); };
+  f.srcdoc = html;
+}
+function exportRows(){
+  return OPS.filter(inPeriod).slice().sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
+}
+function exportReport(kind){
+  const list = exportRows();
+  const inc = sumUsd(list, 'income'), exp = sumUsd(list, 'expense');
+  const label = periodLabel();
+  const fileBase = `Финансы_${label.replace(/\s+/g, '_')}`;
+  const sign = o => o.type === 'income' ? '+' : '−';
+  if (kind === 'xlsx') {
+    const header = ['Дата', 'Тип', 'Категория', 'Тег', 'Сумма, $', 'Сумма в валюте', 'Валюта', 'Заметка', 'Фото'];
+    const rows = list.map(o => [fmtDate(o.date), o.type === 'income' ? 'Доход' : 'Расход', catOf(o.catId).name,
+      tagOf(o.tagId)?.name || '', o.usd, o.amount, o.cur, o.note || '', (o.photos || []).length]);
+    download(xlsxBlob(header, rows, [4, 5, 8]), fileBase + '.xlsx');
+    return;
+  }
+  const trs = list.map(o => `<tr><td>${fmtDate(o.date)}</td><td>${esc(catOf(o.catId).name)}</td><td>${esc(tagOf(o.tagId)?.name || '')}</td><td>${esc(o.note || '')}</td><td class="n">${sign(o)}${usd(o.usd)}</td><td class="n">${o.cur === 'USD' ? '' : fmtNum(o.amount) + ' ' + curOf(o.cur).sym}</td></tr>`).join('');
+  printHtml(`<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>${esc(fileBase)}</title><style>
+    body{font:12px -apple-system,system-ui,sans-serif;color:#111;margin:20px}
+    h1{font-size:18px;margin:0 0 4px} .sub{color:#555;margin:0 0 14px}
+    .tot{display:flex;gap:28px;margin-bottom:16px} .tot b{display:block;font-size:15px}
+    table{width:100%;border-collapse:collapse} th,td{padding:5px 6px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top}
+    th{font-size:11px;color:#555} td.n,th.n{text-align:right;white-space:nowrap}
+    @page{size:A4;margin:14mm}
+  </style></head><body>
+    <h1>Финансы: ${esc(label)}</h1><p class="sub">Все суммы в долларах</p>
+    <div class="tot"><div>Доходы<b>${usd(inc)}</b></div><div>Расходы<b>${usd(exp)}</b></div><div>Баланс<b>${usd(inc - exp)}</b></div></div>
+    <table><thead><tr><th>Дата</th><th>Категория</th><th>Тег</th><th>Заметка</th><th class="n">Сумма, $</th><th class="n">В валюте</th></tr></thead>
+    <tbody>${trs}</tbody></table>
+  </body></html>`);
+}
+function backupJson(){
+  const data = {CAT, TAGS, CUR, OPS, budgets: st.budgets, showBudgets: st.showBudgets};
+  download(new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'}), `finance-backup-${new Date().toISOString().slice(0, 10)}.json`);
+}
+function restoreJson(f){
   const r = new FileReader();
   r.onload = () => {
     try {
       const d = JSON.parse(r.result);
-      if (!Array.isArray(d.cats) || !Array.isArray(d.ops)) throw new Error('bad');
-      db = {currency: d.currency || '₴', cats: d.cats, ops: d.ops};
-      save(); render(); alert('Данные загружены');
+      if (!Array.isArray(d.CAT) || !Array.isArray(d.OPS)) throw new Error('bad');
+      CAT = d.CAT; TAGS = d.TAGS || []; CUR = d.CUR || CUR; OPS = d.OPS;
+      st.budgets = d.budgets || {}; st.showBudgets = d.showBudgets !== false;
+      render();
+      alert('Данные загружены. Фото из резервной копии не входят: они хранятся только на том телефоне, где были добавлены.');
     } catch (e) { alert('Этот файл не похож на резервную копию'); }
   };
   r.readAsText(f);
 }
 
-/* ---------- Обработка нажатий ---------- */
+/* ---------- Нажатия и ввод ---------- */
 const H = {
-  tab(el){ tab = el.dataset.v; render(); },
-  prev(){ month = step(month, -1); render(); },
-  next(){ month = step(month, 1); render(); },
-  setPeriod(el){ month = el.dataset.v === 'day' ? todayISO() : month.slice(0, 7); render(); },
-  setFilter(el){ opFilter = el.dataset.v; render(); },
-  setSort(el){ opSort = el.dataset.v; render(); },
-  setRepType(el){ repType = el.dataset.v; render(); },
-  setCatType(el){ catType = el.dataset.v; render(); },
-  setDraftType(el){ readDraft(); draft.type = el.dataset.v; drawOp(); },
-  addOp(){ openOp(null); },
-  editOp(el){ openOp(el.dataset.id); },
-  saveOp, delOp,
-  addCat(){ openCat(null); },
-  editCat(el){ openCat(el.dataset.id); },
-  saveCat, delCat, confirmDelCat,
-  exportData,
-  reset(){
-    if (!confirm('Стереть все операции и категории? Это нельзя отменить.')) return;
-    db = freshDb(); save(); render();
+  tab(el){ st.view = el.dataset.v; render(); window.scrollTo(0,0); },
+  mode(el){
+    st.mode = el.dataset.v;
+    if (st.mode === 'month') st.month = st.date.slice(0,7);
+    if (st.mode === 'year') st.year = +st.date.slice(0,4);
+    render();
   },
+  openCal(){ st.calMonth = st.date.slice(0,7); drawCal(); },
+  calStep(el){
+    const [y,m] = st.calMonth.split('-').map(Number);
+    const t = new Date(y, m - 1 + Number(el.dataset.v), 1);
+    st.calMonth = `${t.getFullYear()}-${pad(t.getMonth()+1)}`;
+    drawCal();
+  },
+  pickDay(el){ st.date = el.dataset.v; closeSheet(); render(); },
+  openSheet(el){ if (el.dataset.v === 'month') { st.pickYear = +st.month.slice(0,4); drawMonthSheet(); } else drawYearSheet(); },
+  yearStep(el){ st.pickYear += Number(el.dataset.v); drawMonthSheet(); },
+  pickMonth(el){ st.month = el.dataset.v; st.date = st.month + '-01'; closeSheet(); render(); },
+  pickYear(el){ st.year = Number(el.dataset.v); closeSheet(); render(); },
+  opFilter(el){ st.opFilter = el.dataset.v; render(); },
+  opSort(el){ st.opSort = el.dataset.v; render(); },
+  repType(el){ st.repType = el.dataset.v; render(); },
+  toggleCat(el){ st.openCats[el.dataset.v] = !st.openCats[el.dataset.v]; render(); },
+  openTagF(el){ st.tagFTarget = el.dataset.v || 'reports'; drawTagFilter(); },
+  toggleTagF(el){
+    const id = el.dataset.v;
+    const arr = tagFArr();
+    const next = arr.includes(id) ? arr.filter(x => x !== id) : [...arr, id];
+    if (st.tagFTarget === 'ops') st.opTagF = next; else st.tagF = next;
+    el.setAttribute('aria-pressed', String(next.includes(id)));
+  },
+  clearTagF(){ if (st.tagFTarget === 'ops') st.opTagF = []; else st.tagF = []; drawTagFilter(); },
+  closeTagF(){ closeSheet(); render(); },
+  catType(el){ st.catType = el.dataset.v; render(); },
+  addOp(){ st.draftType = 'expense'; st.draftCur = 'USD'; drawOp(null); },
+  editOp(el){ drawOp(Number(el.dataset.id)); },
+  draftType(el){ draftTypeSwitch(el.dataset.v); },
+  pickCat(el){
+    document.getElementById('f-cat').value = el.dataset.v;
+    st.draftTag = null;
+    document.querySelectorAll('.cat-tile[data-act="pickCat"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === el.dataset.v)));
+    renderTagChips();
+  },
+  pickTag(el){
+    st.draftTag = el.dataset.v && st.draftTag !== el.dataset.v ? el.dataset.v : null;
+    renderTagChips();
+  },
+  saveOp, delOp, delPhoto,
+  openBudgets(){ drawBudgets(); },
+  copyBudgets, saveBudgets,
+  toggleBud(){ st.showBudgets = !st.showBudgets; render(); },
+  toggleBg(){ setBg(!bgOn); render(); },
+  donutSeg(el){ const id = el.dataset.v; st.repSel = !id || st.repSel === id ? null : id; render(); },
+  repCalStep(el){
+    const [y,m] = st.repCal.split('-').map(Number);
+    const t = new Date(y, m - 1 + Number(el.dataset.v), 1);
+    st.repCal = `${t.getFullYear()}-${pad(t.getMonth()+1)}`;
+    render();
+  },
+  repDay(el){ st.date = el.dataset.v; st.mode = 'day'; render(); },
+  addCat(){ drawCat(null); },
+  editCat(el){ drawCat(el.dataset.id); },
+  pickIcon, pickColor, addTag, delTag, saveCat, askDelCat, confirmDelCat,
+  addCur(){ drawCurSheet(); },
+  saveCur,
+  exportPdf(){ exportReport('pdf'); },
+  exportXlsx(){ exportReport('xlsx'); },
+  backup(){ backupJson(); },
+  reset(){
+    if (!confirm('Удалить все операции, бюджеты и фото? Категории и теги останутся.')) return;
+    OPS = []; st.budgets = {};
+    saveState(); phCleanup(); render();
+  },
+  cancelOp,
   closeSheet
 };
-
 document.addEventListener('click', e => {
+  if (e.target.id === 'sheet') return closeSheet();
   const el = e.target.closest('[data-act]');
   if (el && H[el.dataset.act]) H[el.dataset.act](el);
 });
+document.addEventListener('input', e => {
+  if (e.target.id === 'f-amount') updateHint();
+});
 document.addEventListener('change', e => {
-  if (e.target.id === 'cur') { db.currency = e.target.value.trim() || '₴'; save(); render(); }
-  if (e.target.id === 'imp' && e.target.files[0]) importFile(e.target.files[0]);
+  if (e.target.id === 'imp' && e.target.files[0]) restoreJson(e.target.files[0]);
+  if (e.target.id === 'f-cur') updateHint();
+  if (e.target.id === 'f-files') addFiles(e.target);
+  if (e.target.id === 'f-date') updateDateLabel();
+  if (e.target.id === 'f-cat') { st.draftTag = null; renderTagChips(); }
+  if (e.target.dataset.rate) {
+    const c = CUR.find(x => x.code === e.target.dataset.rate);
+    const v = parseFloat(e.target.value.replace(',', '.'));
+    if (c && v > 0) c.rate = v;
+    render();
+  }
 });
 
-render();
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  });
+/* ---------- Сохранение на телефоне ----------
+   При первом запуске данных ещё нет: приложение берёт примеры и данные из Excel (см. выше).
+   После этого хранятся только ваши изменения. */
+const STORE_KEY = 'finance-app-v2';
+function saveState(){
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({CAT, TAGS, CUR, OPS, budgets: st.budgets, showBudgets: st.showBudgets, idc, ratesDate: RATES_DATE}));
+  } catch (e) { /* места нет: данные останутся до закрытия приложения */ }
 }
+function loadState(){
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(STORE_KEY)); } catch (e) {}
+  if (!d) return;
+  CAT = d.CAT; TAGS = d.TAGS; CUR = d.CUR; OPS = d.OPS;
+  st.budgets = d.budgets; st.showBudgets = d.showBudgets; RATES_DATE = d.ratesDate || null;
+  idc = Math.max(idc, d.idc || 0, ...OPS.map(o => o.id).filter(n => typeof n === 'number'));
+}
+loadState();
+
+/* ---------- Фон с мерцающими точками: рисуется кодом, поэтому работает офлайн ---------- */
+const bgCanvas = document.getElementById('bg');
+const bgCtx = bgCanvas.getContext('2d');
+const BG_CELL = 18;
+const BG_BLOBS = [[1, 2, .1, 1.3, .34], [2, 1, 2.1, .4, .3], [1, 1, 4.2, 2.6, .36]];
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const bgStart = performance.now();
+let bgOn = true;
+try { bgOn = localStorage.getItem('finance-bg') !== 'off'; } catch (e) {}
+let bgTimer = null;
+function setBg(on){
+  bgOn = on;
+  try { localStorage.setItem('finance-bg', on ? 'on' : 'off'); } catch (e) {}
+  bgApply();
+}
+function bgResize(){
+  const d = Math.min(window.devicePixelRatio || 1, 2);
+  bgCanvas.width = innerWidth * d;
+  bgCanvas.height = innerHeight * d;
+  bgCtx.setTransform(d, 0, 0, d, 0, 0);
+}
+function bgFrame(t){
+  const w = innerWidth, h = innerHeight;
+  const th = t * 2 * Math.PI / 24;   // полный цикл 24 секунды
+  const cols = Math.ceil(w / BG_CELL), rows = Math.ceil(h / BG_CELL);
+  bgCtx.fillStyle = '#06050a';
+  bgCtx.fillRect(0, 0, w, h);
+  for (let gy = 0; gy < rows; gy++) for (let gx = 0; gx < cols; gx++) {
+    const u = (gx + .5) / cols, v = (gy + .5) / rows;
+    let k = 0;
+    for (const [a, b, p, q, r] of BG_BLOBS) {
+      const cx = .5 + .38 * Math.sin(th * a + p), cy = .5 + .36 * Math.cos(th * b + q);
+      const dx = (u - cx) * 1.6, dy = v - cy;
+      k += Math.exp(-(dx * dx + dy * dy) / (r * r)) * .62;
+    }
+    k += .12 * (Math.sin(u * 7 + th * 2) + Math.sin(v * 6 - th + u * 3));
+    k = Math.min(.95, k) - .1;
+    if (k <= .02) continue;
+    k = Math.min(1, k);
+    bgCtx.globalAlpha = .12 + k * .3;
+    bgCtx.fillStyle = (gx + gy) % 2 ? '#7c5cff' : '#4f7cff';
+    bgCtx.beginPath();
+    bgCtx.arc(gx * BG_CELL + BG_CELL / 2, gy * BG_CELL + BG_CELL / 2, .6 + k * 1.6, 0, Math.PI * 2);
+    bgCtx.fill();
+  }
+  bgCtx.globalAlpha = 1;
+}
+function bgStop(){ clearInterval(bgTimer); bgTimer = null; }
+function bgApply(){
+  bgStop();
+  bgCanvas.hidden = !bgOn;
+  if (!bgOn) return;
+  bgResize();
+  bgFrame((performance.now() - bgStart) / 1000);
+  if (reduceMotion || document.hidden) return;
+  // 10 кадров в секунду: глаз видит плавное мерцание, батарея почти не тратится
+  bgTimer = setInterval(() => bgFrame((performance.now() - bgStart) / 1000), 100);
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) bgStop(); else bgApply(); });
+window.addEventListener('resize', () => { if (bgOn) bgApply(); });
+bgApply();
+render();
+phCleanup();
+refreshRates();
 </script>
 </body>
 </html>
