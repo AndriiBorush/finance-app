@@ -1,5 +1,5 @@
 // Офлайн-кэш приложения. При каждом изменении файлов меняйте версию CACHE.
-const CACHE = 'finance-v11';
+const CACHE = 'finance-v13';
 const ASSETS = [
   './',
   './index.html',

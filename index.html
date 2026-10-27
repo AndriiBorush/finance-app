@@ -179,6 +179,9 @@ h3{font-size:13px;color:var(--muted);margin:18px 4px 8px;font-weight:600;text-tr
 .photos:empty{display:none}
 .photos>div{position:relative;aspect-ratio:1;border-radius:10px;background:var(--chip) center/cover no-repeat}
 .photos button{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:11px;line-height:22px;text-align:center}
+/* Шестерёнка закреплена отдельно вверху справа; весь экран начинается ниже неё */
+header{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:16px;z-index:15;padding:0;background:none}
+main{padding-top:calc(env(safe-area-inset-top,0px) + 56px) !important}
 </style>
 </head>
 <body>
@@ -662,14 +665,19 @@ OPS = [
   {id:9029, date:'2026-10-02', type:'expense', catId:'e1', tagId:'t8', amount:210.0, cur:'GEL', rate:0.386143, usd:81.09, note:""}
 ];
 
+/* Сегодняшняя дата по местному времени телефона */
+function todayISO(){
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
 const st = {
   view: 'home',
-  mode: 'day',
-  date: '2026-10-27',
-  month: '2026-10',
-  year: 2026,
-  calMonth: '2026-10',
-  pickYear: 2026,
+  mode: 'month',
+  date: todayISO(),
+  month: todayISO().slice(0, 7),
+  year: new Date().getFullYear(),
+  calMonth: todayISO().slice(0, 7),
+  pickYear: new Date().getFullYear(),
   opFilter: 'all',
   opSort: 'date',
   repType: 'expense',
@@ -677,7 +685,7 @@ const st = {
   openCats: {},        // какие категории раскрыты в отчёте
   tagF: [],            // выбранные теги для фильтра отчёта
   opTagF: [],          // выбранные теги для фильтра операций
-  repCal: '2026-10',   // месяц календаря в отчёте
+  repCal: todayISO().slice(0, 7),   // месяц календаря в отчёте
   repSel: null,        // категория, выбранная кликом по кругу
   showBudgets: true,   // переключатель «Показывать бюджеты» в настройках
   budgets: {},
@@ -1137,7 +1145,7 @@ function updateDateLabel(){
   const v = document.getElementById('f-date').value;
   if (!el || !v) return;
   const [y,m,d] = v.split('-');
-  el.textContent = `${d}.${m}.${y}` + (v === '2026-10-27' ? ' · сегодня' : '');
+  el.textContent = `${d}.${m}.${y}` + (v === todayISO() ? ' · сегодня' : '');
 }
 function drawOp(id){
   const op = id ? OPS.find(o => o.id === id) : null;
