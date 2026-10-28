@@ -1,5 +1,5 @@
 // Офлайн-кэш приложения. При каждом изменении файлов меняйте версию CACHE.
-const CACHE = 'finance-v14';
+const CACHE = 'finance-v15';
 const ASSETS = [
   './',
   './index.html',
@@ -17,10 +17,11 @@ self.addEventListener('install', e => {
   );
 });
 
+// На этом же адресе живут другие приложения Андрея — удаляем только свои старые версии, чужие кэши не трогаем
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k.startsWith('finance-v') && k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
