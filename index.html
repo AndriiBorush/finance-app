@@ -37,6 +37,7 @@ header{display:flex;justify-content:flex-end;padding:calc(env(safe-area-inset-to
 .gear{font-size:22px;width:40px;height:40px;border-radius:12px;text-align:center}
 .gear[aria-current="page"]{background:var(--chip)}
 .periods{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--chip);padding:4px;border-radius:12px}
+.periods.short{grid-template-columns:repeat(2,1fr);width:66%;margin:0 auto}
 .periods button{padding:13px 0;border-radius:9px;font-size:14px;color:var(--muted);font-weight:500;text-align:center}
 .periods button[aria-pressed="true"]{background:var(--card);color:var(--text);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .picker{margin:16px 0 14px;text-align:center}
@@ -71,6 +72,11 @@ h3{font-size:13px;color:var(--muted);margin:18px 4px 8px;font-weight:600;text-tr
 .ico.sm svg{width:11px;height:11px;stroke-width:1.6}
 /* строка категории в отчёте: значок, название, %, сумма, стрелка */
 .crow{display:grid;grid-template-columns:30px minmax(0,1fr) 44px 96px 16px;gap:10px;align-items:center;width:100%;padding:9px 12px;font-variant-numeric:tabular-nums}
+.crow.home{grid-template-columns:30px minmax(0,1fr) 96px 32px}
+.crow.home .chev{padding:10px 0;margin:-10px 0}
+.catops{background:var(--chip);padding:2px 4px}
+.catops .op{border-bottom:1px solid var(--line)}
+.catops .op:last-child{border-bottom:0}
 .crow .pct{color:var(--muted);font-size:14px;text-align:right}
 .crow .sum{font-weight:600;text-align:right;white-space:nowrap}
 .crow .name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -182,6 +188,23 @@ h3{font-size:13px;color:var(--muted);margin:18px 4px 8px;font-weight:600;text-tr
 /* Шестерёнка закреплена отдельно вверху справа; весь экран начинается ниже неё */
 header{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:16px;z-index:15;padding:0;background:none}
 main{padding-top:calc(env(safe-area-inset-top,0px) + 56px) !important}
+.tabs{left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);max-width:420px;margin:0 auto;border:1px solid rgba(255,255,255,.08);border-radius:26px;background:rgba(18,20,26,.72);-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);padding:8px 6px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.tabs button{color:var(--muted);gap:4px;transition:color .2s}
+.tabs button span{display:flex;height:22px}
+.tabs button small{font-size:10px;letter-spacing:.3px}
+.tabs button[aria-current="page"],.tabs button[aria-current="page"] small{color:var(--text)}
+.tabs button[aria-current="page"] span{color:var(--accent)}
+.tabs .fab{flex:0 0 48px;width:48px;height:48px;margin:0 4px;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#8aa3ff,#5b78f0);color:#fff;box-shadow:0 6px 18px rgba(108,140,255,.35)}
+.card>.rcal{margin-top:0;border-top:0;padding-top:0}
+.periods.three{grid-template-columns:repeat(3,1fr);margin-bottom:10px}
+.periods.three button,.periods.two button{padding:9px 0}
+.periods.two{grid-template-columns:1fr 1fr;margin-bottom:10px}
+.fbar.two{grid-template-columns:1fr 1fr}
+.fbar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.fbtn{display:flex;align-items:center;justify-content:center;gap:6px;height:38px;border-radius:12px;background:var(--chip);color:var(--muted);font-size:14px;font-weight:500;white-space:nowrap}
+.fbtn small{font-size:11px;color:var(--muted)}
+.fbtn[aria-pressed="true"]{color:var(--text);box-shadow:inset 0 0 0 1px var(--accent)}
+.fbtn i{font-style:normal;font-size:12px;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:var(--accent);color:var(--on-accent);text-align:center}
 </style>
 </head>
 <body>
@@ -195,11 +218,11 @@ main{padding-top:calc(env(safe-area-inset-top,0px) + 56px) !important}
 </div>
 
 <nav class="tabs" aria-label="Разделы">
-  <button data-act="tab" data-v="home"><span>🏠</span><small>Главная</small></button>
-  <button data-act="tab" data-v="ops"><span>📋</span><small>Операции</small></button>
-  <button class="fab" data-act="addOp" aria-label="Добавить операцию">+</button>
-  <button data-act="tab" data-v="reports"><span>📊</span><small>Отчёты</small></button>
-  <button data-act="tab" data-v="cats"><span>🏷️</span><small>Категории</small></button>
+  <button data-act="tab" data-v="home"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg></span><small>Главная</small></button>
+  <button data-act="tab" data-v="ops"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r=".6"/><circle cx="4" cy="12" r=".6"/><circle cx="4" cy="18" r=".6"/></svg></span><small>Операции</small></button>
+  <button class="fab" data-act="addOp" aria-label="Добавить операцию"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button data-act="tab" data-v="reports"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V5M19 20v-6"/></svg></span><small>Отчёты</small></button>
+  <button data-act="tab" data-v="cats"><span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.3"/></svg></span><small>Категории</small></button>
 </nav>
 
 <div class="sheet" id="sheet" hidden>
@@ -207,11 +230,13 @@ main{padding-top:calc(env(safe-area-inset-top,0px) + 56px) !important}
 </div>
 
 <script>
+const APP_VERSION = '1.16 · 29.10.2026';
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const pad = n => String(n).padStart(2,'0');
 const fmtNum = n => new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2,minimumFractionDigits:2}).format(n);
 const usd = n => fmtNum(n) + ' $';
+const usd0 = n => new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(Math.round(n)) + ' $';  // целые доллары: баланс, доходы и расходы на главной
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtDate = iso => iso.split('-').reverse().join('.');
 
@@ -682,6 +707,9 @@ const st = {
   catType: 'expense',
   openCats: {},        // какие категории раскрыты в отчёте
   tagF: [],            // выбранные теги для фильтра отчёта
+  opCatF: [],
+  repCatF: [],         // выбранные категории для фильтра отчёта
+  catFTarget: 'ops',          // выбранные категории для фильтра операций
   opTagF: [],          // выбранные теги для фильтра операций
   repCal: todayISO().slice(0, 7),   // месяц календаря в отчёте
   repSel: null,        // категория, выбранная кликом по кругу
@@ -714,7 +742,7 @@ const periodLabel = () => {
   if (st.mode === 'year') return `${st.year} год`;
   return 'всё время';
 };
-function periodBlock(){
+function periodBlock(short = false){
   let picker;
   if (st.mode === 'day') {
     const [y,m,d] = st.date.split('-').map(Number);
@@ -728,7 +756,7 @@ function periodBlock(){
     picker = `<span class="picker-static">Вся история</span>`;
   }
   const btn = (v, label) => `<button data-act="mode" data-v="${v}" aria-pressed="${st.mode === v}">${label}</button>`;
-  return `<div class="periods" role="group" aria-label="Период">${btn('day','День')}${btn('month','Месяц')}${btn('year','Год')}${btn('all','Всё время')}</div>
+  return `<div class="periods${short ? ' short' : ''}" role="group" aria-label="Период">${btn('day','День')}${btn('month','Месяц')}${short ? '' : btn('year','Год') + btn('all','Всё время')}</div>
     <div class="picker">${picker}</div>`;
 }
 
@@ -751,48 +779,67 @@ function homeView(list){
   const inc = sumUsd(list, 'income');
   const exp = sumUsd(list, 'expense');
   const bal = inc - exp;
-  const pl = st.mode === 'day' ? 'за день' : 'за период';
-  const top = catRows(list, 'expense');
-  return `${periodBlock()}
-    <div class="card center balance"><small>Баланс</small><b class="${bal < 0 ? 'neg' : ''}">${bal < 0 ? '−' : ''}${usd(Math.abs(bal))}</b></div>
+  const top = catRows(list, 'expense', false, true);
+  return `${periodBlock(true)}
+    <div class="card center balance"><small>Баланс</small><b class="${bal < 0 ? 'neg' : ''}">${bal < 0 ? '−' : ''}${usd0(Math.abs(bal))}</b></div>
     <div class="row2">
-      <div class="card"><small>Доходы ${pl}</small><b class="pos">${usd(inc)}</b></div>
-      <div class="card"><small>Расходы ${pl}</small><b class="neg">${usd(exp)}</b></div>
+      <div class="card"><small>Доходы</small><b class="pos">${usd0(inc)}</b></div>
+      <div class="card"><small>Расходы</small><b class="neg">${usd0(exp)}</b></div>
     </div>
-    <h3>Топ категорий расходов</h3>
-    <div>${top.html}</div>`;
+    <h3 class="center">На что ушло</h3>
+    <div>${top.html}</div>
+    ${st.mode === 'month' ? `<div class="card">${repCal(OPS)}</div>` : ''}`;
+}
+
+function opsGroups(items){
+  const groups = {};
+  items.forEach(o => (groups[o.date] = groups[o.date] || []).push(o));
+  return Object.keys(groups).sort().reverse().map(d => {
+    const g = groups[d];
+    const net = sumUsd(g, 'income') - sumUsd(g, 'expense');
+    return `<div class="day"><span>${fmtDate(d)}</span><span>${net >= 0 ? '+' : '−'}${usd(Math.abs(net))}</span></div>
+      <div class="card list">${g.sort((a,b) => b.id - a.id).map(opRow).join('')}</div>`;
+  }).join('');
+}
+/* Окно с операциями одной категории за выбранный период (с главной) */
+function drawCatOps(catId){
+  const c = catOf(catId);
+  const items = OPS.filter(inPeriod).filter(o => o.catId === catId);
+  openSheet(`
+    <div class="sheet-head">
+      <button class="btn ghost" data-act="closeSheet">Закрыть</button>
+      <h2>${esc(c.name)}</h2>
+      <span style="width:60px"></span>
+    </div>
+    <p class="muted center" style="margin:-6px 0 4px">${periodLabel()} · ${usd(items.reduce((a,o) => a + o.usd, 0))}</p>
+    ${items.length ? opsGroups(items) : '<p class="muted center">Операций нет</p>'}`);
 }
 
 function opsView(list){
   let items = list;
   if (st.opFilter !== 'all') items = items.filter(o => o.type === st.opFilter);
+  if (st.opCatF.length) items = items.filter(o => st.opCatF.includes(o.catId));
   if (st.opTagF.length) items = items.filter(o => st.opTagF.includes(o.tagId));
-  const chips = `<div class="chips">
-      ${[['all','Все'],['expense','Расходы'],['income','Доходы']].map(([v,l]) => `<button class="chip" data-act="opFilter" data-v="${v}" aria-pressed="${st.opFilter === v}">${l}</button>`).join('')}
-    </div>
-    <div class="chips">
-      ${[['date','По дате'],['amount','По сумме']].map(([v,l]) => `<button class="chip" data-act="opSort" data-v="${v}" aria-pressed="${st.opSort === v}">${l}</button>`).join('')}
+  const seg = (v, l) => `<button data-act="opFilter" data-v="${v}" aria-pressed="${st.opFilter === v}">${l}</button>`;
+  const fbtn = (act, label, n) => `<button class="fbtn" data-act="${act}" data-v="ops" aria-pressed="${n > 0}">${label}${n ? ` <i>${n}</i>` : ' <small>▾</small>'}</button>`;
+  const chips = `<div class="periods three" role="group" aria-label="Тип">${seg('all','Все')}${seg('expense','Расходы')}${seg('income','Доходы')}</div>
+    <div class="fbar">
+      ${fbtn('openCatF', 'Категории', st.opCatF.length)}
+      ${fbtn('openTagF', 'Теги', st.opTagF.length)}
+      <button class="fbtn" data-act="opSort" data-v="${st.opSort === 'date' ? 'amount' : 'date'}">↓ ${st.opSort === 'date' ? 'Дата' : 'Сумма'}</button>
     </div>`;
   let body;
   if (!items.length) body = '<p class="muted center">Операций за этот период нет</p>';
   else if (st.opSort === 'amount') {
     body = `<div class="card list">${items.slice().sort((a,b) => b.usd - a.usd).map(opRow).join('')}</div>`;
   } else {
-    const groups = {};
-    items.forEach(o => (groups[o.date] = groups[o.date] || []).push(o));
-    body = Object.keys(groups).sort().reverse().map(d => {
-      const g = groups[d];
-      const net = sumUsd(g, 'income') - sumUsd(g, 'expense');
-      return `<div class="day"><span>${fmtDate(d)}</span><span>${net >= 0 ? '+' : '−'}${usd(Math.abs(net))}</span></div>
-        <div class="card list">${g.sort((a,b) => b.id - a.id).map(opRow).join('')}</div>`;
-    }).join('');
+    body = opsGroups(items);
   }
-  const tagBtn = `<div class="chips"><button class="chip" data-act="openTagF" data-v="ops" aria-pressed="${st.opTagF.length > 0}">Фильтр по тегам${st.opTagF.length ? ' · ' + st.opTagF.length : ''}</button></div>`;
-  return `${periodBlock()}${tagBtn}${chips}${body}`;
+  return `${periodBlock()}${chips}${body}`;
 }
 
 /* Строки категорий с раскрытием: проценты, сумма и теги внутри */
-function catRows(list, type, withBudget = false){
+function catRows(list, type, withBudget = false, home = false){
   const total = sumUsd(list, type);
   const byCat = {};
   list.filter(o => o.type === type).forEach(o => {
@@ -808,20 +855,21 @@ function catRows(list, type, withBudget = false){
     const bud = b ? budgetStrip(b, r.total) : '';
     const color = catColor(r);
     const tagRows = Object.entries(r.tags).sort((a,b) => b[1] - a[1]).map(([key, sum]) => {
-      const name = key === 'none' ? 'Без тега' : tagOf(key).name;
+      if (key === 'none') return '';
+      const name = tagOf(key).name;
       return `<div class="trow"><span class="hash">#</span><span class="tname">${esc(name)}</span><b class="tsum">${usd(sum)}</b></div>`;
     }).join('');
     return `<div class="crow-wrap">
-      <button class="crow" data-act="toggleCat" data-v="${r.id}" aria-expanded="${open}">
+      <button class="crow${home ? ' home' : ''}" data-act="${home ? 'catOps' : 'toggleCat'}" data-v="${r.id}" aria-expanded="${open}">
         ${ico(r.icon, '', color)}
         <span class="name">${esc(r.name)}</span>
-        <span class="pct">${Math.round(r.total / total * 100)}%</span>
+        ${home ? '' : `<span class="pct">${Math.round(r.total / total * 100)}%</span>`}
         <span class="sum">${usd(r.total)}</span>
-        <span class="chev ${open ? 'open' : ''}">${open ? '▴' : '▾'}</span>
+        <span class="chev ${open ? 'open' : ''}"${home ? ` data-act="toggleCat" data-v="${r.id}"` : ''}>${open ? '▴' : '▾'}</span>
       </button>
       ${bud}
-      <div class="trk"><div class="track"><div style="width:${(r.total / total * 100).toFixed(1)}%;background:${color}"></div></div></div>
-      ${open ? `<div class="tagrows">${tagRows}</div>` : ''}
+      ${home ? '' : `<div class="trk"><div class="track"><div style="width:${(r.total / total * 100).toFixed(1)}%;background:${color}"></div></div></div>`}
+      ${open && tagRows ? `<div class="tagrows">${tagRows}</div>` : ''}
     </div>`;
   }).join('') : '<p class="muted center">Нет данных за этот период</p>';
   return {total, html, data: rows};
@@ -929,18 +977,22 @@ function repCal(list){
 }
 
 function reportsView(listAll){
-  const list = st.tagF.length ? listAll.filter(o => o.tagId && st.tagF.includes(o.tagId)) : listAll;
+  let list = st.tagF.length ? listAll.filter(o => o.tagId && st.tagF.includes(o.tagId)) : listAll;
+  if (st.repCatF.length) list = list.filter(o => o.type !== st.repType || st.repCatF.includes(o.catId));
   const rows = catRows(list, st.repType, true);
   const inc = sumUsd(list, 'income');
   const exp = sumUsd(list, 'expense');
-  const filterBtn = `<button class="chip" data-act="openTagF" aria-pressed="${st.tagF.length > 0}">Фильтр по тегам${st.tagF.length ? ' · ' + st.tagF.length : ''}</button>`;
+  const seg = (v, l) => `<button data-act="repType" data-v="${v}" aria-pressed="${st.repType === v}">${l}</button>`;
+  const fbtn = (act, label, n) => `<button class="fbtn" data-act="${act}" aria-pressed="${n > 0}">${label}${n ? ` <i>${n}</i>` : ' <small>▾</small>'}</button>`;
+  const month = st.mode === 'month';
   return `${periodBlock()}
-    <div class="chips" style="flex-wrap:wrap;overflow:visible">
-      <button class="chip" data-act="repType" data-v="expense" aria-pressed="${st.repType === 'expense'}">Расходы</button>
-      <button class="chip" data-act="repType" data-v="income" aria-pressed="${st.repType === 'income'}">Доходы</button>
-      ${filterBtn}${st.mode === 'month' ? '<button class="chip" data-act="openBudgets">Бюджеты</button>' : ''}
+    <div class="periods two" role="group" aria-label="Тип">${seg('expense','Расходы')}${seg('income','Доходы')}</div>
+    <div class="fbar${month ? '' : ' two'}">
+      ${fbtn('openCatF', 'Категории', st.repCatF.length)}
+      ${fbtn('openTagF', 'Теги', st.tagF.length)}
+      ${month ? '<button class="fbtn" data-act="openBudgets">Бюджеты</button>' : ''}
     </div>
-    <div class="card donut-card">${donut(rows.data, rows.total)}<small class="center">${st.repType === 'expense' ? 'Всего расходов' : 'Всего доходов'}${st.tagF.length ? ' по выбранным тегам' : ''}</small>${st.mode === 'month' ? repCal(list) : ''}</div>
+    <div class="card donut-card">${donut(rows.data, rows.total)}<small class="center">${st.repType === 'expense' ? 'Всего расходов' : 'Всего доходов'}${st.tagF.length || st.repCatF.length ? ' по фильтру' : ''}</small></div>
     <h3>По категориям</h3>
     ${rows.html}
     <h3>Экспорт</h3>
@@ -1029,7 +1081,8 @@ function settingsView(){
         <input type="file" id="imp" accept="application/json,.json" hidden></label>
       <button class="op" data-act="reset"><span class="op-main"><b class="neg">Стереть все операции</b><small>Категории и теги останутся. Фото тоже удалятся.</small></span></button>
     </div>
-    <p class="muted" style="font-size:13px;min-height:18px">Данные хранятся только в этом телефоне и браузере. Делайте резервную копию, если меняете телефон.</p>`;
+    <p class="muted" style="font-size:13px;min-height:18px">Данные хранятся только в этом телефоне и браузере. Делайте резервную копию, если меняете телефон.</p>
+    <p class="muted center" style="font-size:12px;margin-top:24px">Версия ${APP_VERSION}</p>`;
 }
 async function fillSettingsInfo(){
   const el = document.getElementById('ph-stats');
@@ -1044,6 +1097,7 @@ async function fillSettingsInfo(){
 /* ---------- Отрисовка ---------- */
 function render(){
   saveState();
+  if (st.view === 'home' && (st.mode === 'year' || st.mode === 'all')) st.mode = 'month';
   const list = OPS.filter(inPeriod);
   const views = {
     home: () => homeView(list),
@@ -1104,6 +1158,21 @@ function drawYearSheet(){
 }
 
 /* Фильтр по тегам: одно окно для Операций и Отчётов, теги сгруппированы по категориям */
+/* Фильтр операций по категориям: плитки со значками, можно выбрать несколько */
+const catFArr = () => st.catFTarget === 'ops' ? st.opCatF : st.repCatF;
+function drawCatFilter(){
+  const sel = catFArr();
+  const types = st.catFTarget === 'ops' ? ['expense','income'] : [st.repType];
+  const grp = (type, title) => !types.includes(type) ? '' : `<div class="tagfgroup">${title}</div>
+    <div class="cats-grid" style="margin-top:6px">${CAT.filter(c => c.type === type).map(c => `<button class="cat-tile" data-act="toggleCatF" data-v="${c.id}" aria-pressed="${sel.includes(c.id)}">${ico(c.icon, 'lg', catColor(c))}<span>${esc(c.name)}</span></button>`).join('')}</div>`;
+  openSheet(`
+    <div class="sheet-head">
+      <button class="btn ghost" data-act="clearCatF">Сбросить</button>
+      <h2>Категории</h2>
+      <button class="btn" data-act="closeTagF">Готово</button>
+    </div>
+    ${grp('expense', 'Расходы')}${grp('income', 'Доходы')}`);
+}
 function tagFArr(){ return st.tagFTarget === 'ops' ? st.opTagF : st.tagF; }
 function drawTagFilter(){
   const sel = tagFArr();
@@ -1620,8 +1689,18 @@ const H = {
   pickYear(el){ st.year = Number(el.dataset.v); closeSheet(); render(); },
   opFilter(el){ st.opFilter = el.dataset.v; render(); },
   opSort(el){ st.opSort = el.dataset.v; render(); },
-  repType(el){ st.repType = el.dataset.v; render(); },
+  repType(el){ st.repCatF = []; st.repType = el.dataset.v; render(); },
+  catOps(el){ drawCatOps(el.dataset.v); },
   toggleCat(el){ st.openCats[el.dataset.v] = !st.openCats[el.dataset.v]; render(); },
+  openCatF(el){ st.catFTarget = el.dataset.v || 'reports'; drawCatFilter(); },
+  toggleCatF(el){
+    const id = el.dataset.v;
+    const arr = catFArr();
+    const next = arr.includes(id) ? arr.filter(x => x !== id) : [...arr, id];
+    if (st.catFTarget === 'ops') st.opCatF = next; else st.repCatF = next;
+    el.setAttribute('aria-pressed', String(next.includes(id)));
+  },
+  clearCatF(){ if (st.catFTarget === 'ops') st.opCatF = []; else st.repCatF = []; drawCatFilter(); },
   openTagF(el){ st.tagFTarget = el.dataset.v || 'reports'; drawTagFilter(); },
   toggleTagF(el){
     const id = el.dataset.v;
