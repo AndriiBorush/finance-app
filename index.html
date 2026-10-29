@@ -186,7 +186,7 @@ h3{font-size:13px;color:var(--muted);margin:18px 4px 8px;font-weight:600;text-tr
 .photos>div{position:relative;aspect-ratio:1;border-radius:10px;background:var(--chip) center/cover no-repeat}
 .photos button{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:11px;line-height:22px;text-align:center}
 /* Шестерёнка закреплена отдельно вверху справа; весь экран начинается ниже неё */
-header{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:16px;z-index:15;padding:0;background:none}
+header{position:fixed;top:calc(env(safe-area-inset-top,0px) + 20px);right:16px;z-index:15;padding:0;background:none}
 main{padding-top:calc(env(safe-area-inset-top,0px) + 56px) !important}
 .tabs{left:0;right:0;bottom:0;border:0;border-top:1px solid rgba(255,255,255,.08);border-radius:22px 22px 0 0;background:rgba(18,20,26,.72);-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);padding:8px max(6px,env(safe-area-inset-left,0px)) calc(env(safe-area-inset-bottom,0px) + 6px);box-shadow:0 -6px 24px rgba(0,0,0,.35)}
 .tabs button{color:var(--muted);gap:4px;transition:color .2s}
@@ -230,7 +230,7 @@ main{padding-top:calc(env(safe-area-inset-top,0px) + 56px) !important}
 </div>
 
 <script>
-const APP_VERSION = '1.17 · 29.10.2026';
+const APP_VERSION = '1.18 · 29.10.2026';
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const pad = n => String(n).padStart(2,'0');
@@ -1859,6 +1859,19 @@ bgApply();
 render();
 phCleanup();
 refreshRates();
+
+/* Новая версия: при открытии сверяем номер с сайтом. Телефон держит старую страницу до 10 минут,
+   поэтому при расхождении открываем адрес с номером версии — он загружается заново. Без интернета ничего не делаем. */
+fetch('index.html?check=' + Date.now(), {cache: 'no-store'})
+  .then(r => r.text())
+  .then(t => {
+    const m = t.match(/const APP_VERSION = '([^']+)'/);
+    if (!m || m[1] === APP_VERSION) return;
+    if (sessionStorage.getItem('finance-upd') === m[1]) return;  // уже пробовали — не крутимся по кругу
+    sessionStorage.setItem('finance-upd', m[1]);
+    location.replace(location.pathname + '?v=' + encodeURIComponent(m[1]));
+  })
+  .catch(() => {});
 </script>
 </body>
 </html>
