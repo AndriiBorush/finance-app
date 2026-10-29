@@ -218,6 +218,8 @@ main{padding-top:calc(env(safe-area-inset-top,0px) + 56px) !important}
 .fbtn i{font-style:normal;font-size:12px;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:var(--accent);color:var(--on-accent);text-align:center}
 .card,.crow-wrap,.periods{background:rgba(18,20,28,.58);border:1px solid rgba(255,255,255,.07);border-radius:18px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .btn.go{background:var(--green);color:#06120b;font-size:17px;padding:16px;border-radius:14px}
+.taglist input.tname{background:none;border:0;border-radius:0;padding:4px 0;font-size:15px;border-bottom:1px dashed var(--line)}
+.taglist input.tname:focus{border-bottom-color:var(--accent);outline:none}
 </style>
 </head>
 <body>
@@ -244,7 +246,7 @@ main{padding-top:calc(env(safe-area-inset-top,0px) + 56px) !important}
 </div>
 
 <script>
-const APP_VERSION = '1.21 · 29.10.2026';
+const APP_VERSION = '1.22 · 29.10.2026';
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const pad = n => String(n).padStart(2,'0');
@@ -1220,10 +1222,8 @@ function updateHint(){
   const h = document.getElementById('f-hint');
   if (!h) return;
   const c = curOf(document.getElementById('f-cur').value);
-  const amt = parseFloat((document.getElementById('f-amount').value || '').replace(',', '.'));
-  if (c.code === 'USD') h.textContent = 'Доллары, пересчёт не нужен';
-  else if (amt > 0) h.textContent = `≈ ${usd(Math.round(amt * c.rate * 100) / 100)} по курсу 1 ${c.code} = ${c.rate} $`;
-  else h.textContent = `Курс 1 ${c.code} = ${c.rate} $ (из «Валюты и курсы»)`;
+  // Только курс: сколько этой валюты дают за 1 доллар
+  h.textContent = c.code === 'USD' ? '' : `1 $ = ${fmtNum(1 / c.rate)} ${c.sym}`;
 }
 
 function updateDateLabel(){
@@ -1350,19 +1350,19 @@ function renderCatSheet(c){
     </div>
     <label class="field">Название<input id="c-name" value="${esc(c.name)}"></label>
     <label class="field">Тип<select id="c-type"><option value="expense" ${c.type === 'expense' ? 'selected' : ''}>Расход</option><option value="income" ${c.type === 'income' ? 'selected' : ''}>Доход</option></select></label>
+    <div class="field">Теги</div>
+    <div class="card list taglist">${st.catTags.length ? st.catTags.map(t => `
+      <div class="trow"><span class="hash">#</span><input class="tname" value="${esc(t.name)}" oninput="editTag('${t.id}', this.value)" aria-label="Название тега"><button class="del" data-act="delTag" data-v="${t.id}" aria-label="Удалить тег">✕</button></div>`).join('') : '<p class="muted" style="padding:10px 0;margin:0">Тегов пока нет</p>'}</div>
+    <div class="addtag">
+      <input id="t-name" placeholder="Например, Лекарства">
+      <button data-act="addTag">Добавить</button>
+    </div>
     <div class="field">Цвет и значок</div>
     <div class="cat-preview" id="cat-preview">${ico(st.catIcon, 'lg', st.catColor)}</div>
     <div class="swatches">${COLORS.map(c => `<button data-act="pickColor" data-v="${c}" aria-pressed="${c === st.catColor}" aria-label="Цвет ${c}" style="background:${c}"></button>`).join('')}</div>
     <div class="field">Значок</div>
     ${ICON_GROUPS.map(g => `<div class="field" style="margin:6px 0 6px">${g.title}</div>
     <div class="icons">${g.keys.map(k => `<button data-act="pickIcon" data-v="${k}" aria-current="${k === st.catIcon}" aria-label="Значок">${ico(k)}</button>`).join('')}</div>`).join('')}
-    <div class="field">Теги</div>
-    <div class="card list taglist">${st.catTags.length ? st.catTags.map(t => `
-      <div class="trow"><span class="hash">#</span><span class="tname">${esc(t.name)}</span><button class="del" data-act="delTag" data-v="${t.id}" aria-label="Удалить тег">✕</button></div>`).join('') : '<p class="muted" style="padding:10px 0;margin:0">Тегов пока нет</p>'}</div>
-    <div class="addtag">
-      <input id="t-name" placeholder="Например, Лекарства">
-      <button data-act="addTag">Добавить</button>
-    </div>
     <p class="err" id="c-err"></p>
     ${st.editCat ? '<button class="btn danger wide" data-act="askDelCat">Удалить категорию</button>' : ''}`);
 }
@@ -1392,6 +1392,11 @@ function addTag(){
   st.catTags.push({id: 't' + (++idc), name, catId: st.catDraftId});
   renderCatSheet(readCatForm());
 }
+/* Название тега правится прямо в списке; операции с этим тегом остаются при нём */
+function editTag(id, name){
+  const t = st.catTags.find(x => x.id === id);
+  if (t) t.name = name;
+}
 function delTag(el){
   st.catTags = st.catTags.filter(t => t.id !== el.dataset.v);
   renderCatSheet(readCatForm());
@@ -1403,6 +1408,9 @@ function saveCat(){
   const data = readCatForm();
   data.name = data.name.trim();
   if (!data.name) { document.getElementById('c-err').textContent = 'Введите название'; return; }
+  st.catTags.forEach(t => { t.name = t.name.trim(); });
+  if (st.catTags.some(t => !t.name)) { document.getElementById('c-err').textContent = 'У тега пустое название'; return; }
+  if (new Set(st.catTags.map(t => t.name.toLowerCase())).size < st.catTags.length) { document.getElementById('c-err').textContent = 'Два тега с одинаковым названием'; return; }
   const catId = st.catDraftId;
   if (st.editCat) Object.assign(CAT.find(x => x.id === st.editCat), data);
   else CAT.push({id: catId, ...data});
