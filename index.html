@@ -63,6 +63,23 @@ header{display:flex;justify-content:flex-end;padding:calc(env(safe-area-inset-to
 .curchip button{color:var(--muted);font-size:12px;padding:0 0 0 2px}
 .curchip.add{background:none;border:1px dashed var(--line);color:var(--accent)}
 #k-q{width:100%;margin-bottom:6px}
+.pdfrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 4px}
+.pdfrow .field{min-width:0}
+.pdfrow input[type=date]{display:block;width:100%;min-width:0;box-sizing:border-box;-webkit-appearance:none;appearance:none;text-align:center}
+#pdfview{position:fixed;inset:0;z-index:60;background:#2a2c33;display:flex;flex-direction:column}
+#pdfview .pv-head{display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 6px;background:var(--card)}
+#pdfview .pv-hint{margin:0;padding:6px 12px 8px;font-size:12px;color:var(--muted);text-align:center;background:var(--card)}
+#pdfview .pv-scroll{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px}
+#pdfview #deck .slide,#pdfview #deck .appendix{margin:0 auto 10px;box-shadow:0 2px 12px rgba(0,0,0,.4)}
+#pdfview #deck .appendix{background:#fff;width:297mm}
+@media print{
+  html,body{background:#fff!important;padding:0!important;margin:0!important;min-height:0!important}
+  body>*:not(#pdfview){display:none!important}
+  #pdfview{position:static;display:block;background:#fff}
+  #pdfview .pv-head,#pdfview .pv-hint{display:none}
+  #pdfview .pv-scroll{overflow:visible;padding:0}
+  #pdfview #deck .slide,#pdfview #deck .appendix{margin:0;box-shadow:none}
+}
 .pdfchips{display:flex;flex-wrap:wrap;gap:8px}
 .pdfchips .chip[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
 .chips{display:flex;gap:8px;overflow-x:auto;margin:0 0 10px;padding-bottom:2px}
@@ -271,7 +288,7 @@ main{padding-top:calc(env(safe-area-inset-top,0px) + 56px) !important}
 </div>
 
 <script>
-const APP_VERSION = '1.29 · 31.10.2026';
+const APP_VERSION = '1.30 · 31.10.2026';
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const pad = n => String(n).padStart(2,'0');
@@ -1731,7 +1748,7 @@ function drawPdfSheet(){
     </div>
     <div class="field">Период</div>
     <div class="pdfchips">${Object.entries(p).map(([k, v]) => `<button class="chip" data-act="pdfPick" data-v="${k}" aria-pressed="${k === st.pdfPick}">${v[0]}</button>`).join('')}</div>
-    <div class="row2" style="margin:12px 0 4px">
+    <div class="pdfrow">
       <label class="field">С<input type="date" id="pdf-from" value="${from}" onchange="pdfCustom()"></label>
       <label class="field">По<input type="date" id="pdf-to" value="${to}" onchange="pdfCustom()"></label>
     </div>
@@ -1757,8 +1774,36 @@ function makePdf(){
   const list = OPS.filter(o => o.date >= from && o.date <= to);
   if (!list.length) { err.textContent = 'За этот период нет операций'; return; }
   closeSheet();
-  printHtml(pdfDeck(from, to, list));
+  showDeck(pdfDeck(from, to, list));
 }
+
+/* Готовый отчёт показывается на весь экран. На iPhone печать из скрытого окна не работает,
+   поэтому печатается сама страница: всё, кроме отчёта, на время печати скрыто. */
+function showDeck(html){
+  const css = html.match(/<style>([\s\S]*)<\/style>/)[1]
+    .replace(/(^|})\s*([^{}@]+)\{/g, (m, a, sel) => a + sel.split(',').map(x => x.trim() === 'body' ? '#deck' : '#deck ' + x.trim()).join(',') + '{');
+  const body = html.match(/<body>([\s\S]*)<\/body>/)[1];
+  closeDeck();
+  const v = document.createElement('div');
+  v.id = 'pdfview';
+  v.innerHTML = `<div class="pv-head"><button class="btn ghost" data-act="closeDeck">Закрыть</button><b>Отчёт</b><button class="btn" data-act="printDeck">Сохранить PDF</button></div>
+    <p class="pv-hint">«Сохранить PDF» → в окне печати «Поделиться» → «Сохранить в Файлы»</p>
+    <div class="pv-scroll"><div id="deck"><style>${css}</style>${body}</div></div>`;
+  document.body.appendChild(v);
+  fitDeck();
+}
+function fitDeck(){
+  const d = document.getElementById('deck');
+  if (d) d.style.zoom = Math.min(1, (window.innerWidth - 16) / d.scrollWidth);
+}
+function closeDeck(){ document.getElementById('pdfview')?.remove(); }
+function printDeck(){
+  const d = document.getElementById('deck');
+  d.style.zoom = 1;
+  window.print();
+  setTimeout(fitDeck, 500);
+}
+window.addEventListener('resize', fitDeck);
 
 /* ---------- PDF-презентация: слайды ---------- */
 function pdfLabel(from, to){
@@ -2009,7 +2054,7 @@ const H = {
   pickCur, delCur,
   exportPdf(){ drawPdfSheet(); },
   pdfPick(el){ st.pdfPick = el.dataset.v; drawPdfSheet(); },
-  makePdf,
+  makePdf, closeDeck, printDeck,
   exportXlsx(){ exportReport('xlsx'); },
   backup(){ backupJson(); },
   reset(){
