@@ -283,7 +283,7 @@ main{padding-top:calc(env(safe-area-inset-top,0px) + 56px) !important}
 </div>
 
 <script>
-const APP_VERSION = '1.31 · 31.10.2026';
+const APP_VERSION = '1.32 · 31.10.2026';
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const pad = n => String(n).padStart(2,'0');
@@ -2198,7 +2198,7 @@ const sheetPanel = document.getElementById('sheet-body');
 let sw = null;
 sheetPanel.addEventListener('touchstart', e => {
   const t = e.target;
-  sw = e.touches.length === 1 && !t.closest('input,textarea,select,.grip,.swatches,.icons') ? {x: e.touches[0].clientX, y: e.touches[0].clientY, top: sheetPanel.scrollTop, axis: null} : null;
+  sw = e.touches.length === 1 && !t.closest('input,textarea,select,.grip,.swatches,.icons,.chips') ? {x: e.touches[0].clientX, y: e.touches[0].clientY, top: sheetPanel.scrollTop, axis: null} : null;
 }, {passive: true});
 sheetPanel.addEventListener('touchmove', e => {
   if (!sw) return;
