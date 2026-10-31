@@ -58,6 +58,11 @@ header{display:flex;justify-content:flex-end;padding:calc(env(safe-area-inset-to
 .picker-btn:hover{background:var(--chip)}
 .picker-btn small{font-size:14px;color:var(--accent);font-weight:500}
 .picker-static{font-size:22px;font-weight:600;padding:6px 10px}
+.curchips{display:flex;flex-wrap:wrap;gap:8px;padding:10px 0 12px}
+.curchip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;background:var(--chip);font-size:14px;font-weight:500}
+.curchip button{color:var(--muted);font-size:12px;padding:0 0 0 2px}
+.curchip.add{background:none;border:1px dashed var(--line);color:var(--accent)}
+#k-q{width:100%;margin-bottom:6px}
 .chips{display:flex;gap:8px;overflow-x:auto;margin:0 0 10px;padding-bottom:2px}
 .chip{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);white-space:nowrap;font-size:14px}
 .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
@@ -264,7 +269,7 @@ main{padding-top:calc(env(safe-area-inset-top,0px) + 56px) !important}
 </div>
 
 <script>
-const APP_VERSION = '1.26 · 31.10.2026';
+const APP_VERSION = '1.28 · 31.10.2026';
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const pad = n => String(n).padStart(2,'0');
@@ -661,14 +666,10 @@ let TAGS = [
   {id:'t5', name:'Друзья', catId:'e3'},
   {id:'t6', name:'Семья', catId:'e3'},
   {id:'t7', name:'Метро', catId:'e6'},
-  {id:'t8', name:'Оринабижи', catId:'e1'},
   {id:'t9', name:'Мороженое', catId:'e7'},
   {id:'t10', name:'Выпечка', catId:'e7'},
-  {id:'t11', name:'Олегу на ДР', catId:'e3'},
-  {id:'t12', name:'Дарина', catId:'e3'},
   {id:'t13', name:'Такси', catId:'e6'},
   {id:'t14', name:'Автобус', catId:'e6'},
-  {id:'t15', name:'Property Maintenance', catId:'e4'},
   {id:'t16', name:'Свет', catId:'e4'},
   {id:'t17', name:'Газ', catId:'e4'},
   {id:'t18', name:'Вода', catId:'e4'}
@@ -685,42 +686,15 @@ let CUR = [
   {code:'UAH', sym:'₴', rate:0.024}
 ];
 const curOf = code => CUR.find(c => c.code === code) || CUR[0];
+/* Справочник для добавления валюты: код, знак, название. Курс берётся из интернета сам. */
+const WORLD = [['EUR','€','Евро'],['GEL','₾','Грузинский лари'],['UAH','₴','Гривна'],['PLN','zł','Польский злотый'],['GBP','£','Фунт стерлингов'],['CHF','Fr','Швейцарский франк'],['TRY','₺','Турецкая лира'],['AED','د.إ','Дирхам ОАЭ'],['RUB','₽','Рубль'],['KZT','₸','Тенге'],['AMD','֏','Армянский драм'],['AZN','₼','Азербайджанский манат'],['BYN','Br','Белорусский рубль'],['MDL','L','Молдавский лей'],['CZK','Kč','Чешская крона'],['HUF','Ft','Форинт'],['RON','lei','Румынский лей'],['BGN','лв','Болгарский лев'],['RSD','дин','Сербский динар'],['SEK','kr','Шведская крона'],['NOK','kr','Норвежская крона'],['DKK','kr','Датская крона'],['ILS','₪','Шекель'],['EGP','E£','Египетский фунт'],['JPY','¥','Иена'],['CNY','¥','Юань'],['KRW','₩','Вона'],['THB','฿','Бат'],['VND','₫','Донг'],['IDR','Rp','Рупия (Индонезия)'],['INR','₹','Индийская рупия'],['SGD','S$','Сингапурский доллар'],['HKD','HK$','Гонконгский доллар'],['CAD','C$','Канадский доллар'],['AUD','A$','Австралийский доллар'],['NZD','NZ$','Новозеландский доллар'],['MXN','Mex$','Мексиканское песо'],['BRL','R$','Бразильский реал'],['ARS','AR$','Аргентинское песо'],['ZAR','R','Рэнд'],['SAR','﷼','Саудовский риял'],['QAR','QR','Катарский риал'],['UZS','сўм','Узбекский сум'],['KGS','сом','Киргизский сом'],['MYR','RM','Ринггит'],['PHP','₱','Филиппинское песо']];
+let RATES_ALL = {};
 
 let OPS = [];
-let idc = 0;
+// Счётчик номеров начинается выше стартовых тегов (t1…t18), чтобы новые теги не совпали с ними
+let idc = 100;
 
-/* Октябрь 2026 — траты из Excel-файла другого приложения (29 записей, курсы из файла) */
-OPS = [
-  {id:9001, date:'2026-10-26', type:'expense', catId:'e1', tagId:null, amount:11.0, cur:'GEL', rate:0.386364, usd:4.25, note:"Майонез в ред маркете плюс вода с автомата"},
-  {id:9002, date:'2026-10-25', type:'expense', catId:'e3', tagId:'t11', amount:35.0, cur:'GEL', rate:0.386, usd:13.51, note:"Чайник"},
-  {id:9003, date:'2026-10-25', type:'expense', catId:'e6', tagId:'t13', amount:4.6, cur:'GEL', rate:0.386957, usd:1.78, note:"От Олега с Виолой домой"},
-  {id:9004, date:'2026-10-25', type:'expense', catId:'e9', tagId:null, amount:3.14, cur:'GEL', rate:0.38535, usd:1.21, note:""},
-  {id:9005, date:'2026-10-25', type:'expense', catId:'e6', tagId:'t14', amount:1.4, cur:'GEL', rate:0.385714, usd:0.54, note:""},
-  {id:9006, date:'2026-10-24', type:'expense', catId:'e1', tagId:null, amount:90.81, cur:'GEL', rate:0.386081, usd:35.06, note:"В магнити  75 + овощи рядом 15"},
-  {id:9007, date:'2026-10-24', type:'expense', catId:'e7', tagId:'t9', amount:2.2, cur:'GEL', rate:0.386364, usd:0.85, note:""},
-  {id:9008, date:'2026-10-24', type:'expense', catId:'e6', tagId:'t14', amount:2.8, cur:'GEL', rate:0.385714, usd:1.08, note:""},
-  {id:9009, date:'2026-10-24', type:'expense', catId:'e5', tagId:null, amount:19.8, cur:'GEL', rate:0.385859, usd:7.64, note:"Туалетная бумага из карефура"},
-  {id:9010, date:'2026-10-23', type:'expense', catId:'e1', tagId:null, amount:28.0, cur:'GEL', rate:0.386071, usd:10.81, note:"Spar"},
-  {id:9011, date:'2026-10-23', type:'expense', catId:'e1', tagId:null, amount:69.25, cur:'GEL', rate:0.386137, usd:26.74, note:"Rad market"},
-  {id:9012, date:'2026-10-23', type:'expense', catId:'e6', tagId:'t14', amount:0.7, cur:'GEL', rate:0.385714, usd:0.27, note:"Ехал от Данилы"},
-  {id:9013, date:'2026-10-23', type:'expense', catId:'e3', tagId:'t12', amount:5.0, cur:'GEL', rate:0.386, usd:1.93, note:"Цветок"},
-  {id:9014, date:'2026-10-21', type:'expense', catId:'e4', tagId:'t18', amount:1.39, cur:'GEL', rate:0.388489, usd:0.54, note:"Вода"},
-  {id:9015, date:'2026-10-20', type:'expense', catId:'e2', tagId:'t3', amount:340.0, cur:'GEL', rate:0.385353, usd:131.02, note:""},
-  {id:9016, date:'2026-10-20', type:'expense', catId:'e1', tagId:'t8', amount:90.0, cur:'GEL', rate:0.385333, usd:34.68, note:""},
-  {id:9017, date:'2026-10-20', type:'expense', catId:'e2', tagId:'t4', amount:266.0, cur:'GEL', rate:0.385338, usd:102.5, note:"Терапевт для Дарины 120 за визит и 146 за кровь и флюрагопфию"},
-  {id:9018, date:'2026-10-20', type:'expense', catId:'e7', tagId:'t10', amount:8.0, cur:'GEL', rate:0.385, usd:3.08, note:""},
-  {id:9019, date:'2026-10-20', type:'expense', catId:'e6', tagId:'t13', amount:6.4, cur:'GEL', rate:0.385937, usd:2.47, note:"Ездили в больницу(Дарине было плохо)"},
-  {id:9020, date:'2026-10-20', type:'expense', catId:'e8', tagId:null, amount:3.0, cur:'GEL', rate:0.386667, usd:1.16, note:""},
-  {id:9021, date:'2026-10-19', type:'expense', catId:'e3', tagId:'t11', amount:4000.0, cur:'UAH', rate:0.022195, usd:88.78, note:"Олегу на ДР"},
-  {id:9022, date:'2026-10-19', type:'expense', catId:'e1', tagId:null, amount:29.0, cur:'GEL', rate:0.386207, usd:11.2, note:"Айран, крем сыр, молоко, сыр"},
-  {id:9023, date:'2026-10-19', type:'expense', catId:'e1', tagId:null, amount:25.0, cur:'GEL', rate:0.386, usd:9.65, note:"Помидоры, огурцы, киви, 10 яиц, Два лимона"},
-  {id:9024, date:'2026-10-18', type:'expense', catId:'e1', tagId:null, amount:13.47, cur:'GEL', rate:0.386043, usd:5.2, note:"Чипсы крем сыр сникерс"},
-  {id:9025, date:'2026-10-15', type:'expense', catId:'e4', tagId:'t15', amount:50.0, cur:'GEL', rate:0.386, usd:19.3, note:""},
-  {id:9026, date:'2026-10-11', type:'expense', catId:'e1', tagId:'t8', amount:2855.0, cur:'UAH', rate:0.0222, usd:63.38, note:""},
-  {id:9027, date:'2026-10-09', type:'expense', catId:'e4', tagId:'t16', amount:20.32, cur:'GEL', rate:0.386319, usd:7.85, note:""},
-  {id:9028, date:'2026-10-09', type:'expense', catId:'e4', tagId:'t17', amount:6.83, cur:'GEL', rate:0.38653, usd:2.64, note:""},
-  {id:9029, date:'2026-10-02', type:'expense', catId:'e1', tagId:'t8', amount:210.0, cur:'GEL', rate:0.386143, usd:81.09, note:""}
-];
+/* Новый человек начинает с пустого списка. У того, кто уже пользуется, операции берутся из памяти телефона (loadState). */
 
 /* Сегодняшняя дата по местному времени телефона */
 function todayISO(){
@@ -1085,19 +1059,14 @@ function catsView(){
 }
 
 function settingsView(){
-  const ratesRows = CUR.map(c => `<div class="rate-row">
-        <span><b style="font-weight:500">${c.sym} ${c.code}</b><small>${c.code === 'USD' ? 'основная валюта' : 'сколько $ в 1 ' + c.code}</small></span>
-        <b style="font-variant-numeric:tabular-nums">${c.code === 'USD' ? '1' : fmtNum(c.rate)}</b>
-      </div>`).join('');
   return `<h3>Валюты и курсы</h3>
     <div class="card list">
-      <label class="rate-row"><span><b style="font-weight:500">Валюта ввода</b><small>Сразу стоит в новой операции</small></span>
+      <label class="rate-row"><span><b style="font-weight:500">Валюта ввода</b><small>Сразу стоит в новой операции. Ниже — валюты в списке операции.</small></span>
         <select onchange="st.defCur = this.value; saveState()" aria-label="Валюта ввода">${CUR.map(c => `<option value="${c.code}" ${c.code === st.defCur ? 'selected' : ''}>${c.sym} ${c.code}</option>`).join('')}</select></label>
-      ${ratesRows}
-      <button class="op" data-act="addCur"><span class="op-main"><b style="color:var(--accent)">+ Добавить валюту</b><small>Код, знак и курс к доллару</small></span></button>
+      <div class="curchips">${CUR.map(c => `<span class="curchip">${esc(c.sym)} ${c.code}${c.code === 'USD' ? '' : `<button data-act="delCur" data-v="${c.code}" aria-label="Убрать ${c.code}">✕</button>`}</span>`).join('')}<button class="curchip add" data-act="addCur">+ Добавить</button></div>
+      <p class="err" id="cur-err" style="margin:0 0 8px"></p>
     </div>
-    <p class="muted" style="font-size:12px;margin:6px 4px 0" id="rates-date">Курсы обновляются при открытии приложения, когда есть интернет.</p>
-    <p class="muted" style="font-size:12px;margin:4px 4px 0">Курсы: <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener" style="color:var(--accent)">Rates By Exchange Rate API</a></p>
+    <p class="muted" style="font-size:12px;margin:6px 4px 0"><span id="rates-date">Курсы обновляются сами, когда есть интернет</span> · <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener" style="color:var(--accent)">Exchange Rate API</a></p>
     <h3>Фон</h3>
     <div class="card list">
       <button class="op" data-act="togglePulse"><span class="op-main"><b>Пульс баланса</b><small>Фон светится красным, когда баланс в минусе, и зелёным, когда в плюсе.</small></span><i class="switch" aria-pressed="${pulseOn}"></i></button>
@@ -1137,7 +1106,7 @@ async function fillSettingsInfo(){
     el.textContent = `${s.n} фото · ${(s.bytes / 1048576).toFixed(1)} МБ на телефоне`;
   }
   const r = document.getElementById('rates-date');
-  if (r && RATES_DATE) r.textContent = `Курсы на ${new Date(RATES_DATE).toLocaleString('ru-RU', {day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'})}`;
+  if (r && RATES_DATE) r.textContent = `Курсы обновлены ${new Date(RATES_DATE).toLocaleString('ru-RU', {day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'})}`;
 }
 
 /* ---------- Отрисовка ---------- */
@@ -1466,28 +1435,47 @@ function confirmDelCat(){
   closeSheet(); render();
 }
 
+/* Новая валюта: поиск по названию или коду, нажатие — валюта добавлена со знаком и курсом */
 function drawCurSheet(){
   openSheet(`
     <div class="sheet-head">
       <button class="btn ghost" data-act="closeSheet">Отмена</button>
-      <h2>Новая валюта</h2>
-      <button class="btn" data-act="saveCur">Готово</button>
+      <h2>Добавить валюту</h2>
+      <span style="width:60px"></span>
     </div>
-    <label class="field">Код валюты<input id="k-code" maxlength="4" placeholder="например PLN"></label>
-    <label class="field">Знак<input id="k-sym" maxlength="3" placeholder="например zł"></label>
-    <label class="field">Сколько $ в одной единице<input id="k-rate" inputmode="decimal" placeholder="например 0.25"></label>
-    <p class="err" id="k-err"></p>`);
+    <input id="k-q" placeholder="Поиск: злотый, PLN…" oninput="drawCurList()" autocomplete="off">
+    <p class="err" id="k-err"></p>
+    <div class="card list" id="k-list"></div>`);
+  drawCurList();
 }
-function saveCur(){
-  const code = document.getElementById('k-code').value.trim().toUpperCase();
-  const sym = document.getElementById('k-sym').value.trim() || code;
-  const rate = parseFloat(document.getElementById('k-rate').value.replace(',', '.'));
+function curChoices(){
+  const have = new Set(CUR.map(c => c.code));
+  const known = new Set(WORLD.map(w => w[0]));
+  /* Остальные валюты из ответа сервиса курсов — без названия, только код */
+  const extra = Object.keys(RATES_ALL).filter(k => !known.has(k)).sort().map(k => [k, k, '']);
+  return WORLD.concat(extra).filter(w => !have.has(w[0]));
+}
+function drawCurList(){
+  const q = (document.getElementById('k-q')?.value || '').trim().toLowerCase();
+  const list = curChoices().filter(w => !q || w[0].toLowerCase().includes(q) || w[2].toLowerCase().includes(q));
+  document.getElementById('k-list').innerHTML = list.length ? list.map(w => `<button class="op" data-act="pickCur" data-v="${w[0]}"><span class="op-main"><b>${esc(w[1])} ${w[0]}</b><small>${esc(w[2]) || '&nbsp;'}${RATES_ALL[w[0]] ? ' · 1 $ = ' + fmtNum(RATES_ALL[w[0]]) + ' ' + esc(w[1]) : ''}</small></span></button>`).join('') : '<p class="muted" style="padding:10px 0;margin:0">Ничего не найдено</p>';
+}
+async function pickCur(el){
+  const code = el.dataset.v;
+  const w = WORLD.find(x => x[0] === code) || [code, code, ''];
   const err = document.getElementById('k-err');
-  if (!code) { err.textContent = 'Введите код валюты'; return; }
-  if (CUR.some(c => c.code === code)) { err.textContent = 'Такая валюта уже есть'; return; }
-  if (!(rate > 0)) { err.textContent = 'Введите курс больше нуля'; return; }
-  CUR.push({code, sym, rate});
+  if (!RATES_ALL[code]) { err.textContent = 'Загружаю курс…'; await refreshRates(); }
+  if (!RATES_ALL[code]) { err.textContent = 'Нет курса для ' + code + '. Нужен интернет — попробуйте позже.'; return; }
+  CUR.push({code, sym: w[1], rate: +(1 / RATES_ALL[code]).toFixed(6)});
   closeSheet(); render();
+}
+/* Убрать валюту из списка можно, только если по ней нет операций */
+function delCur(el){
+  const code = el.dataset.v;
+  if (OPS.some(o => o.cur === code)) { document.getElementById('cur-err').textContent = `По ${code} есть операции — эту валюту убрать нельзя`; return; }
+  CUR = CUR.filter(c => c.code !== code);
+  if (st.defCur === code) st.defCur = 'USD';
+  render();
 }
 
 /* ---------- Фото: хранятся на телефоне (IndexedDB), сжимаются при добавлении ---------- */
@@ -1587,6 +1575,7 @@ async function refreshRates(){
     const res = await fetch('https://open.er-api.com/v6/latest/USD');
     const d = await res.json();
     if (d.result !== 'success') return;
+    RATES_ALL = d.rates;
     CUR.forEach(c => { const v = d.rates[c.code]; if (c.code !== 'USD' && v) c.rate = +(1 / v).toFixed(6); });
     RATES_DATE = d.time_last_update_utc;
     render();
@@ -1804,7 +1793,7 @@ const H = {
   editCat(el){ drawCat(el.dataset.id); },
   pickIcon, pickColor, addTag, delTag, saveCat, askDelCat, confirmDelCat,
   addCur(){ drawCurSheet(); },
-  saveCur,
+  pickCur, delCur,
   exportPdf(){ exportReport('pdf'); },
   exportXlsx(){ exportReport('xlsx'); },
   backup(){ backupJson(); },
@@ -1844,7 +1833,7 @@ document.addEventListener('change', e => {
 const STORE_KEY = 'finance-app-v2';
 function saveState(){
   try {
-    localStorage.setItem(STORE_KEY, JSON.stringify({CAT, TAGS, CUR, OPS, budgets: st.budgets, showBudgets: st.showBudgets, defCur: st.defCur, idc, ratesDate: RATES_DATE}));
+    localStorage.setItem(STORE_KEY, JSON.stringify({CAT, TAGS, CUR, OPS, budgets: st.budgets, showBudgets: st.showBudgets, defCur: st.defCur, idc, ratesDate: RATES_DATE, ratesAll: RATES_ALL}));
   } catch (e) { /* места нет: данные останутся до закрытия приложения */ }
 }
 function loadState(){
@@ -1852,7 +1841,7 @@ function loadState(){
   try { d = JSON.parse(localStorage.getItem(STORE_KEY)); } catch (e) {}
   if (!d) return;
   CAT = d.CAT; TAGS = d.TAGS; CUR = d.CUR; OPS = d.OPS;
-  st.budgets = d.budgets; st.showBudgets = d.showBudgets; st.defCur = d.defCur || 'USD'; RATES_DATE = d.ratesDate || null;
+  st.budgets = d.budgets; st.showBudgets = d.showBudgets; st.defCur = d.defCur || 'USD'; RATES_DATE = d.ratesDate || null; RATES_ALL = d.ratesAll || {};
   idc = Math.max(idc, d.idc || 0, ...OPS.map(o => o.id).filter(n => typeof n === 'number'));
 }
 loadState();
