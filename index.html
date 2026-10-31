@@ -63,6 +63,8 @@ header{display:flex;justify-content:flex-end;padding:calc(env(safe-area-inset-to
 .curchip button{color:var(--muted);font-size:12px;padding:0 0 0 2px}
 .curchip.add{background:none;border:1px dashed var(--line);color:var(--accent)}
 #k-q{width:100%;margin-bottom:6px}
+.pdfchips{display:flex;flex-wrap:wrap;gap:8px}
+.pdfchips .chip[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
 .chips{display:flex;gap:8px;overflow-x:auto;margin:0 0 10px;padding-bottom:2px}
 .chip{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);white-space:nowrap;font-size:14px}
 .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
@@ -269,7 +271,7 @@ main{padding-top:calc(env(safe-area-inset-top,0px) + 56px) !important}
 </div>
 
 <script>
-const APP_VERSION = '1.28 · 31.10.2026';
+const APP_VERSION = '1.29 · 31.10.2026';
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const pad = n => String(n).padStart(2,'0');
@@ -1015,7 +1017,7 @@ function reportsView(listAll){
     ${rows.html}
     <h3>Экспорт</h3>
     <div class="card list">
-      <button class="op" data-act="exportPdf"><span class="op-main"><b>Скачать PDF</b><small>Операции и итоги за выбранный период</small></span></button>
+      <button class="op" data-act="exportPdf"><span class="op-main"><b>Скачать PDF</b><small>Презентация: итоги, на что ушло, выводы. Период выбираете сами</small></span></button>
       <button class="op" data-act="exportXlsx"><span class="op-main"><b>Скачать Excel (.xlsx)</b><small>Все операции таблицей, удобно для нейросети и своих расчётов</small></span></button>
     </div>
     <p class="muted center" style="font-size:13px">Доходов за период: ${usd(inc)} · Расходов: ${usd(exp)}</p>`;
@@ -1691,6 +1693,217 @@ function exportReport(kind){
     <tbody>${trs}</tbody></table>
   </body></html>`);
 }
+/* ---------- PDF-презентация: окно выбора периода ---------- */
+const isoOf = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const addDays = (iso, n) => { const [y,m,d] = iso.split('-').map(Number); return isoOf(new Date(y, m - 1, d + n)); };
+const daysBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000) + 1;
+const longDate = iso => { const [y,m,d] = iso.split('-').map(Number); return `${d} ${MONTHS_GEN[m-1]} ${y}`; };
+/* Готовые периоды: [название, с, по] */
+function pdfPresets(){
+  const t = todayISO(), [y,m] = t.split('-').map(Number);
+  const mEnd = (yy, mm) => isoOf(new Date(yy, mm, 0));
+  const pm = m === 1 ? [y - 1, 12] : [y, m - 1];
+  const dates = OPS.map(o => o.date).sort();
+  const cur = (() => {
+    if (st.mode === 'day') return [st.date, st.date];
+    if (st.mode === 'month') { const [yy,mm] = st.month.split('-').map(Number); return [`${st.month}-01`, mEnd(yy, mm)]; }
+    if (st.mode === 'year') return [`${st.year}-01-01`, `${st.year}-12-31`];
+    return [dates[0] || t, dates[dates.length - 1] || t];
+  })();
+  return {
+    cur: ['Как в отчёте', ...cur],
+    thism: ['Этот месяц', `${y}-${pad(m)}-01`, mEnd(y, m)],
+    prevm: ['Прошлый месяц', `${pm[0]}-${pad(pm[1])}-01`, mEnd(pm[0], pm[1])],
+    d30: ['30 дней', addDays(t, -29), t],
+    thisy: ['Этот год', `${y}-01-01`, `${y}-12-31`],
+    all: ['Всё время', dates[0] || t, dates[dates.length - 1] || t]
+  };
+}
+function drawPdfSheet(){
+  const p = pdfPresets();
+  st.pdfPick = st.pdfPick && p[st.pdfPick] ? st.pdfPick : 'cur';
+  const [, from, to] = p[st.pdfPick];
+  openSheet(`
+    <div class="sheet-head">
+      <button class="btn ghost" data-act="closeSheet">Отмена</button>
+      <h2>Отчёт PDF</h2>
+      <span style="width:60px"></span>
+    </div>
+    <div class="field">Период</div>
+    <div class="pdfchips">${Object.entries(p).map(([k, v]) => `<button class="chip" data-act="pdfPick" data-v="${k}" aria-pressed="${k === st.pdfPick}">${v[0]}</button>`).join('')}</div>
+    <div class="row2" style="margin:12px 0 4px">
+      <label class="field">С<input type="date" id="pdf-from" value="${from}" onchange="pdfCustom()"></label>
+      <label class="field">По<input type="date" id="pdf-to" value="${to}" onchange="pdfCustom()"></label>
+    </div>
+    <p class="muted" id="pdf-info" style="font-size:13px;margin:4px 0 12px"></p>
+    <p class="err" id="pdf-err"></p>
+    <button class="btn wide" data-act="makePdf">Создать PDF</button>`);
+  pdfInfo();
+}
+function pdfCustom(){
+  st.pdfPick = 'custom';
+  document.querySelectorAll('.pdfchips .chip').forEach(b => b.setAttribute('aria-pressed', 'false'));
+  pdfInfo();
+}
+function pdfInfo(){
+  const from = document.getElementById('pdf-from').value, to = document.getElementById('pdf-to').value;
+  const n = OPS.filter(o => o.date >= from && o.date <= to).length;
+  document.getElementById('pdf-info').textContent = from && to && from <= to ? `${longDate(from)} — ${longDate(to)} · операций: ${n}` : '';
+}
+function makePdf(){
+  const from = document.getElementById('pdf-from').value, to = document.getElementById('pdf-to').value;
+  const err = document.getElementById('pdf-err');
+  if (!from || !to || from > to) { err.textContent = 'Проверьте даты: «с» должно быть раньше «по»'; return; }
+  const list = OPS.filter(o => o.date >= from && o.date <= to);
+  if (!list.length) { err.textContent = 'За этот период нет операций'; return; }
+  closeSheet();
+  printHtml(pdfDeck(from, to, list));
+}
+
+/* ---------- PDF-презентация: слайды ---------- */
+function pdfLabel(from, to){
+  const [y1,m1,d1] = from.split('-').map(Number), [y2,m2,d2] = to.split('-').map(Number);
+  const last = new Date(y2, m2, 0).getDate();
+  if (from === to) return longDate(from);
+  if (y1 === y2 && m1 === m2 && d1 === 1 && d2 === last) return `${MONTHS[m1-1]} ${y1}`;
+  if (y1 === y2 && m1 === 1 && d1 === 1 && m2 === 12 && d2 === 31) return `${y1} год`;
+  return `${longDate(from)} — ${longDate(to)}`;
+}
+function groupBy(list, type){
+  const by = {};
+  list.filter(o => o.type === type).forEach(o => {
+    const r = by[o.catId] = by[o.catId] || {total: 0, n: 0, tags: {}};
+    r.total += o.usd; r.n++;
+    if (o.tagId) r.tags[o.tagId] = (r.tags[o.tagId] || 0) + o.usd;
+  });
+  return Object.entries(by).map(([id, r]) => ({...catOf(id), ...r, color: catColor(catOf(id)) || '#8a8a8a'})).sort((a, b) => b.total - a.total);
+}
+/* Кольцевая диаграмма из сегментов окружности */
+function pdfDonut(rows, total, center){
+  const R = 70, C = 2 * Math.PI * R;
+  let off = 0;
+  const segs = rows.map(r => {
+    const len = r.total / total * C;
+    const s = `<circle r="${R}" cx="100" cy="100" fill="none" stroke="${r.color}" stroke-width="26" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-off}" transform="rotate(-90 100 100)"/>`;
+    off += len;
+    return s;
+  }).join('');
+  return `<svg viewBox="0 0 200 200" width="290" height="290">${segs}<text x="100" y="96" text-anchor="middle" font-size="12" fill="#888">${center[0]}</text><text x="100" y="118" text-anchor="middle" font-size="19" font-weight="700" fill="#111">${center[1]}</text></svg>`;
+}
+/* Столбики по дням (до 62 дней) или по месяцам */
+function pdfBars(list, from, to){
+  const byDay = daysBetween(from, to) <= 62;
+  const keys = [];
+  if (byDay) { for (let d = from; d <= to; d = addDays(d, 1)) keys.push(d); }
+  else { let [y,m] = from.slice(0,7).split('-').map(Number); const end = to.slice(0,7); while (`${y}-${pad(m)}` <= end) { keys.push(`${y}-${pad(m)}`); m++; if (m > 12) { m = 1; y++; } } }
+  const sums = Object.fromEntries(keys.map(k => [k, 0]));
+  list.filter(o => o.type === 'expense').forEach(o => { const k = byDay ? o.date : o.date.slice(0,7); if (k in sums) sums[k] += o.usd; });
+  const max = Math.max(...Object.values(sums), 1);
+  const W = 900, H = 260, bw = W / keys.length;
+  const bars = keys.map((k, i) => {
+    const h = sums[k] / max * (H - 30);
+    const lab = byDay ? (keys.length <= 31 || +k.slice(8) % 2 === 1 ? +k.slice(8) : '') : MONTHS[+k.slice(5) - 1].slice(0, 3);
+    return `<rect x="${i * bw + bw * .18}" y="${H - 20 - h}" width="${bw * .64}" height="${Math.max(h, sums[k] ? 1.5 : 0)}" rx="${Math.min(4, bw * .2)}" fill="#6c8cff"/>
+      <text x="${i * bw + bw / 2}" y="${H - 4}" text-anchor="middle" font-size="${byDay ? 10 : 12}" fill="#888">${lab}</text>`;
+  }).join('');
+  const peak = keys.reduce((a, k) => sums[k] > sums[a] ? k : a, keys[0]);
+  return {svg: `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${bars}</svg>`, byDay, peak, peakSum: sums[peak], n: keys.length};
+}
+function pdfDeck(from, to, list){
+  const label = pdfLabel(from, to);
+  const inc = sumUsd(list, 'income'), exp = sumUsd(list, 'expense'), bal = inc - exp;
+  const days = daysBetween(from, to);
+  const ex = groupBy(list, 'expense'), ic = groupBy(list, 'income');
+  const prevTo = addDays(from, -1), prevFrom = addDays(from, -days);
+  const prev = OPS.filter(o => o.date >= prevFrom && o.date <= prevTo);
+  const pExp = sumUsd(prev, 'expense');
+  const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+  const bars = pdfBars(list, from, to);
+  const big = list.filter(o => o.type === 'expense').sort((a, b) => b.usd - a.usd).slice(0, 8);
+  const sign = o => o.type === 'income' ? '+' : '−';
+  const fileBase = `Финансы_${label.replace(/\s+/g, '_')}`;
+  const slide = (title, body, kicker = '') => `<section class="slide"><div class="kicker">${kicker || esc(label)}</div><h2>${title}</h2>${body}<div class="foot">Финансы · ${esc(label)}</div></section>`;
+
+  /* Выводы простыми словами */
+  const notes = [];
+  if (ex[0]) notes.push(`Больше всего денег ушло на категорию <b>«${esc(ex[0].name)}»</b> — ${usd0(ex[0].total)}, это ${pct(ex[0].total, exp)}% всех расходов.`);
+  if (ex.length > 2) notes.push(`Три главные категории (${ex.slice(0,3).map(r => esc(r.name)).join(', ')}) — ${pct(ex.slice(0,3).reduce((a, r) => a + r.total, 0), exp)}% расходов.`);
+  if (exp) notes.push(`В среднем уходило <b>${usd0(exp / days)}</b> в день.`);
+  if (bars.peakSum) notes.push(`Самый дорогой ${bars.byDay ? 'день' : 'месяц'} — ${bars.byDay ? longDate(bars.peak) : MONTHS[+bars.peak.slice(5) - 1] + ' ' + bars.peak.slice(0,4)}: ${usd0(bars.peakSum)}.`);
+  if (big[0]) notes.push(`Самая крупная трата — ${usd0(big[0].usd)} (${esc(catOf(big[0].catId).name)}${big[0].note ? ', ' + esc(big[0].note) : ''}).`);
+  if (pExp) { const d = pct(exp - pExp, pExp); notes.push(`По сравнению с прошлым таким же периодом (${pdfLabel(prevFrom, prevTo)}) расходы ${d > 0 ? `<b class="neg">выросли на ${d}%</b>` : d < 0 ? `<b class="pos">снизились на ${-d}%</b>` : 'не изменились'}.`); }
+  if (inc) notes.push(`Доходы ${usd0(inc)}; ${bal >= 0 ? `отложить можно было <b class="pos">${usd0(bal)}</b> (${pct(bal, inc)}% дохода)` : `расходы больше доходов на <b class="neg">${usd0(-bal)}</b>`}.`);
+
+  const legend = rows => rows.map(r => `<div class="lg"><i style="background:${r.color}"></i><span>${esc(r.name)}</span><em>${pct(r.total, rows.reduce((a, x) => a + x.total, 0))}%</em><b>${usd(r.total)}</b></div>`).join('');
+  const topCats = ex.slice(0, 5).map(r => {
+    const tags = Object.entries(r.tags).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([id, s]) => `${esc(tagOf(id)?.name || '')} ${usd0(s)}`).join(' · ');
+    return `<div class="tc"><div class="tch"><i style="background:${r.color}"></i><span>${esc(r.name)}</span><b>${usd(r.total)}</b></div>
+      <div class="bar"><div style="width:${pct(r.total, ex[0].total)}%;background:${r.color}"></div></div>
+      <small>${r.n} ${r.n % 10 === 1 && r.n % 100 !== 11 ? 'операция' : r.n % 10 >= 2 && r.n % 10 <= 4 && (r.n % 100 < 10 || r.n % 100 >= 20) ? 'операции' : 'операций'}${tags ? ' · ' + tags : ''}</small></div>`;
+  }).join('');
+  const rows = list.slice().sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id)
+    .map(o => `<tr><td>${fmtDate(o.date)}</td><td>${esc(catOf(o.catId).name)}</td><td>${esc(tagOf(o.tagId)?.name || '')}</td><td>${esc(o.note || '')}</td><td class="n ${o.type === 'income' ? 'pos' : ''}">${sign(o)}${usd(o.usd)}</td><td class="n">${o.cur === 'USD' ? '' : fmtNum(o.amount) + ' ' + esc(curOf(o.cur).sym)}</td></tr>`).join('');
+
+  return `<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>${esc(fileBase)}</title><style>
+    @page{size:A4 landscape;margin:0}
+    *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body{margin:0;font:14px/1.45 -apple-system,system-ui,"SF Pro Text",sans-serif;color:#111;background:#fff}
+    .slide{width:297mm;height:210mm;padding:16mm 18mm 14mm;position:relative;page-break-after:always;break-after:page;overflow:hidden}
+    .slide:last-child{page-break-after:auto}
+    .kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#6c8cff;font-weight:700}
+    h2{font-size:30px;margin:4px 0 18px;letter-spacing:-.02em}
+    .foot{position:absolute;left:18mm;right:18mm;bottom:8mm;font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:6px}
+    .pos{color:#22a35a}.neg{color:#e0484c}
+    .cover{background:linear-gradient(140deg,#0f1220 0%,#1b2140 55%,#2a3570 100%);color:#fff}
+    .cover .kicker{color:#9db0ff}.cover h1{font-size:56px;margin:22mm 0 4px;letter-spacing:-.03em}
+    .cover .sub{font-size:20px;color:#c7cff5;margin:0 0 18mm}
+    .cover .foot{color:#7f8bc0;border-color:rgba(255,255,255,.12)}
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .kpi{border-radius:18px;padding:18px 20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+    .kpi small{display:block;color:#aab4e0;font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+    .kpi b{font-size:34px;letter-spacing:-.02em}
+    .cover .pos{color:#5fe08f}.cover .neg{color:#ff7a7d}
+    .meta{margin-top:12px;color:#aab4e0;font-size:13px}
+    .two{display:grid;grid-template-columns:300px 1fr;gap:28px;align-items:center}
+    .lg{display:grid;grid-template-columns:14px 1fr 50px 110px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #f0f0f0}
+    .lg i,.tch i{width:12px;height:12px;border-radius:4px;display:block}
+    .lg em{font-style:normal;color:#888;text-align:right}.lg b{text-align:right}
+    .tc{margin-bottom:16px}.tch{display:grid;grid-template-columns:14px 1fr auto;gap:10px;align-items:center;font-size:16px}
+    .bar{height:10px;background:#f1f2f6;border-radius:99px;margin:7px 0 5px;overflow:hidden}.bar div{height:100%;border-radius:99px}
+    .tc small{color:#777}
+    .stats{display:flex;gap:30px;margin-bottom:14px;color:#555}.stats b{display:block;font-size:22px;color:#111}
+    .big{width:100%;border-collapse:collapse}.big td{padding:9px 6px;border-bottom:1px solid #f0f0f0}.big td.n{text-align:right;font-weight:600;white-space:nowrap}
+    .notes{list-style:none;padding:0;margin:0;columns:1}.notes li{padding:11px 0 11px 30px;border-bottom:1px solid #f0f0f0;position:relative;font-size:16px}
+    .notes li:before{content:'';position:absolute;left:6px;top:19px;width:9px;height:9px;border-radius:50%;background:#6c8cff}
+    .ops{width:100%;border-collapse:collapse;font-size:11px}.ops th,.ops td{padding:4px 6px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}
+    .ops th{color:#888;font-weight:600}.ops td.n,.ops th.n{text-align:right;white-space:nowrap}
+    .appendix{page-break-before:always;padding:14mm 18mm}
+    .appendix h2{font-size:22px}
+  </style></head><body>
+    <section class="slide cover">
+      <div class="kicker">Финансовый отчёт</div>
+      <h1>${esc(label)}</h1>
+      <p class="sub">Куда ушли деньги и сколько пришло</p>
+      <div class="kpis">
+        <div class="kpi"><small>Доходы</small><b class="pos">${usd0(inc)}</b></div>
+        <div class="kpi"><small>Расходы</small><b class="neg">${usd0(exp)}</b></div>
+        <div class="kpi"><small>Баланс</small><b class="${bal < 0 ? 'neg' : 'pos'}">${bal < 0 ? '−' : ''}${usd0(Math.abs(bal))}</b></div>
+      </div>
+      <p class="meta">${list.length} операций · ${days} ${days % 10 === 1 && days % 100 !== 11 ? 'день' : days % 10 >= 2 && days % 10 <= 4 && (days % 100 < 10 || days % 100 >= 20) ? 'дня' : 'дней'} · все суммы в долларах</p>
+      <div class="foot">Финансы · ${new Date().toLocaleDateString('ru-RU')}</div>
+    </section>
+    ${notes.length ? slide('Главное за период', `<ul class="notes">${notes.map(n => `<li>${n}</li>`).join('')}</ul>`) : ''}
+    ${ex.length ? slide('На что ушли деньги', `<div class="two">${pdfDonut(ex, exp, ['Расходы', usd0(exp)])}<div>${legend(ex.slice(0, 9))}${ex.length > 9 ? `<p style="color:#888;margin-top:8px">и ещё ${ex.length - 9} категорий на ${usd0(ex.slice(9).reduce((a, r) => a + r.total, 0))}</p>` : ''}</div></div>`) : ''}
+    ${ex.length ? slide('Главные категории', topCats, 'Подробнее о расходах') : ''}
+    ${exp ? slide(bars.byDay ? 'Расходы по дням' : 'Расходы по месяцам', `<div class="stats"><div>Всего<b>${usd0(exp)}</b></div><div>В среднем в день<b>${usd0(exp / days)}</b></div><div>Пик<b>${usd0(bars.peakSum)}</b></div></div>${bars.svg}`, 'Динамика') : ''}
+    ${ic.length ? slide('Откуда пришли деньги', `<div class="two">${pdfDonut(ic, inc, ['Доходы', usd0(inc)])}<div>${legend(ic)}</div></div>`, 'Доходы') : ''}
+    ${big.length ? slide('Крупнейшие траты', `<table class="big">${big.map(o => `<tr><td style="width:90px;color:#888">${fmtDate(o.date)}</td><td><b>${esc(catOf(o.catId).name)}</b>${tagOf(o.tagId) ? ' · ' + esc(tagOf(o.tagId).name) : ''}${o.note ? `<br><small style="color:#888">${esc(o.note)}</small>` : ''}</td><td class="n neg">−${usd(o.usd)}</td></tr>`).join('')}</table>`, 'Расходы') : ''}
+    <section class="appendix"><div class="kicker">Приложение</div><h2>Все операции</h2>
+      <table class="ops"><thead><tr><th>Дата</th><th>Категория</th><th>Тег</th><th>Заметка</th><th class="n">Сумма, $</th><th class="n">В валюте</th></tr></thead><tbody>${rows}</tbody></table>
+    </section>
+  </body></html>`;
+}
+
 function backupJson(){
   const data = {CAT, TAGS, CUR, OPS, budgets: st.budgets, showBudgets: st.showBudgets};
   download(new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'}), `finance-backup-${new Date().toISOString().slice(0, 10)}.json`);
@@ -1794,7 +2007,9 @@ const H = {
   pickIcon, pickColor, addTag, delTag, saveCat, askDelCat, confirmDelCat,
   addCur(){ drawCurSheet(); },
   pickCur, delCur,
-  exportPdf(){ exportReport('pdf'); },
+  exportPdf(){ drawPdfSheet(); },
+  pdfPick(el){ st.pdfPick = el.dataset.v; drawPdfSheet(); },
+  makePdf,
   exportXlsx(){ exportReport('xlsx'); },
   backup(){ backupJson(); },
   reset(){
