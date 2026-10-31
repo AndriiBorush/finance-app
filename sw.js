@@ -1,5 +1,5 @@
 // Офлайн-режим приложения. При изменении иконок или манифеста меняйте версию CACHE.
-const CACHE = 'finance-v20';
+const CACHE = 'finance-v22';
 const ASSETS = [
   './',
   './index.html',

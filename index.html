@@ -37,6 +37,8 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:2}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f1115;--card:#171a21;--line:#262b36;--text:#eef1f6;--muted:#8a93a6;--green:#34c77b;--red:#ff6b6b;--accent:#6c8cff;--on-accent:#0f1115;--chip:#1f2430;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#0f1115;--card:#171a21;--line:#262b36;--text:#eef1f6;--muted:#8a93a6;--green:#34c77b;--red:#ff6b6b;--accent:#6c8cff;--on-accent:#0f1115;--chip:#1f2430;color-scheme:dark}
 *{box-sizing:border-box}
+/* iPhone с экрана «Домой»: короткая страница поднимает нижнюю панель на высоту строки со временем; страница всегда выше экрана */
+html{min-height:calc(100% + env(safe-area-inset-top,0px))}
 html,body{margin:0;background:#08080B;color:var(--text);font:15px/1.4 -apple-system,system-ui,"SF Pro Text",sans-serif}
 body{padding-block:0 130px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .wrap{max-width:420px;margin:0 auto}
@@ -260,7 +262,7 @@ main{padding-top:calc(env(safe-area-inset-top,0px) + 56px) !important}
 </div>
 
 <script>
-const APP_VERSION = '1.23 · 31.10.2026';
+const APP_VERSION = '1.25 · 31.10.2026';
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const pad = n => String(n).padStart(2,'0');
@@ -1719,7 +1721,7 @@ function restoreJson(f){
 
 /* ---------- Нажатия и ввод ---------- */
 const H = {
-  tab(el){ st.view = el.dataset.v; render(); window.scrollTo(0,0); },
+  tab(el){ if (el.dataset.v === 'settings' && st.view !== 'settings') st.backView = st.view; st.view = el.dataset.v; render(); window.scrollTo(0,0); },
   mode(el){
     const prev = st.mode;
     if (prev === el.dataset.v) return;
@@ -1901,6 +1903,37 @@ sheetPanel.addEventListener('touchend', e => {
   if (!far) { sheetPanel.style.transform = ''; return; }
   sheetPanel.style.transform = axis === 'x' ? `translateX(${dx > 0 ? 110 : -110}%)` : 'translateY(110%)';
   setTimeout(closeSheet, 200);
+});
+
+/* Настройки закрываются как окна: свайп влево, вправо или вниз (с самого верха) — возврат на прошлый экран */
+const viewEl = document.getElementById('view');
+let ss = null;
+viewEl.addEventListener('touchstart', e => {
+  ss = st.view === 'settings' && e.touches.length === 1 && !e.target.closest('input,textarea,select') ? {x: e.touches[0].clientX, y: e.touches[0].clientY, top: window.scrollY, axis: null} : null;
+}, {passive: true});
+viewEl.addEventListener('touchmove', e => {
+  if (!ss) return;
+  const dx = e.touches[0].clientX - ss.x, dy = e.touches[0].clientY - ss.y;
+  if (!ss.axis) {
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+    ss.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : (dy > 0 && ss.top <= 0 ? 'y' : 'none');
+  }
+  if (ss.axis === 'x') { viewEl.style.transition = 'none'; viewEl.style.transform = `translateX(${dx}px)`; }
+  else if (ss.axis === 'y' && dy > 0) { e.preventDefault(); viewEl.style.transition = 'none'; viewEl.style.transform = `translateY(${dy}px)`; }
+}, {passive: false});
+viewEl.addEventListener('touchend', e => {
+  if (!ss || !ss.axis || ss.axis === 'none') { ss = null; return; }
+  const dx = e.changedTouches[0].clientX - ss.x, dy = e.changedTouches[0].clientY - ss.y;
+  const axis = ss.axis; ss = null;
+  const far = axis === 'x' ? Math.abs(dx) > 90 : dy > 110;
+  viewEl.style.transition = 'transform .22s ease-out, opacity .22s';
+  if (!far) { viewEl.style.transform = ''; return; }
+  viewEl.style.transform = axis === 'x' ? `translateX(${dx > 0 ? 100 : -100}%)` : 'translateY(60%)';
+  viewEl.style.opacity = '0';
+  setTimeout(() => {
+    viewEl.style.transition = 'none'; viewEl.style.transform = ''; viewEl.style.opacity = '';
+    H.tab({dataset: {v: st.backView || 'home'}});
+  }, 200);
 });
 
 /* Порядок тегов в окне категории: тянуть за ≡ вверх или вниз */
