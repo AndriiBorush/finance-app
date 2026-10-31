@@ -38,7 +38,7 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:2}
 :root[data-theme="dark"]{--bg:#0f1115;--card:#171a21;--line:#262b36;--text:#eef1f6;--muted:#8a93a6;--green:#34c77b;--red:#ff6b6b;--accent:#6c8cff;--on-accent:#0f1115;--chip:#1f2430;color-scheme:dark}
 *{box-sizing:border-box}
 /* iPhone с экрана «Домой»: короткая страница поднимает нижнюю панель на высоту строки со временем; страница всегда выше экрана */
-html{min-height:calc(100% + env(safe-area-inset-top,0px))}
+html{min-height:calc(100% + env(safe-area-inset-top,0px));-webkit-text-size-adjust:100%;text-size-adjust:100%}
 html,body{margin:0;background:#08080B;color:var(--text);font:15px/1.4 -apple-system,system-ui,"SF Pro Text",sans-serif}
 body{padding-block:0 130px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .wrap{max-width:420px;margin:0 auto}
@@ -66,20 +66,15 @@ header{display:flex;justify-content:flex-end;padding:calc(env(safe-area-inset-to
 .pdfrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 4px}
 .pdfrow .field{min-width:0}
 .pdfrow input[type=date]{display:block;width:100%;min-width:0;box-sizing:border-box;-webkit-appearance:none;appearance:none;text-align:center}
-#pdfview{position:fixed;inset:0;z-index:60;background:#2a2c33;display:flex;flex-direction:column}
-#pdfview .pv-head{display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 6px;background:var(--card)}
-#pdfview .pv-hint{margin:0;padding:6px 12px 8px;font-size:12px;color:var(--muted);text-align:center;background:var(--card)}
+#pdfview{position:fixed;inset:0;z-index:60;background:#2a2c33;display:flex;flex-direction:column;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+#pdfview .pv-head{display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 8px;background:var(--card)}
 #pdfview .pv-scroll{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px}
-#pdfview #deck .slide,#pdfview #deck .appendix{margin:0 auto 10px;box-shadow:0 2px 12px rgba(0,0,0,.4)}
-#pdfview #deck .appendix{background:#fff;width:297mm}
-@media print{
-  html,body{background:#fff!important;padding:0!important;margin:0!important;min-height:0!important}
-  body>*:not(#pdfview){display:none!important}
-  #pdfview{position:static;display:block;background:#fff}
-  #pdfview .pv-head,#pdfview .pv-hint{display:none}
-  #pdfview .pv-scroll{overflow:visible;padding:0}
-  #pdfview #deck .slide,#pdfview #deck .appendix{margin:0;box-shadow:none}
-}
+#pdfview .pv-foot{background:var(--card);padding:10px 16px calc(env(safe-area-inset-bottom,0px) + 12px)}
+#pdfview .pv-hint{margin:0 0 8px;font-size:12px;color:var(--muted);text-align:center}
+#pdfview .btn.wide[disabled]{opacity:.5}
+#pdfview .deck .slide,#pdfview .deck .appendix{margin:0 auto 10px;box-shadow:0 2px 12px rgba(0,0,0,.4)}
+.deck{width:297mm;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.deck .appendix{background:#fff;width:297mm}
 .pdfchips{display:flex;flex-wrap:wrap;gap:8px}
 .pdfchips .chip[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
 .chips{display:flex;gap:8px;overflow-x:auto;margin:0 0 10px;padding-bottom:2px}
@@ -288,7 +283,7 @@ main{padding-top:calc(env(safe-area-inset-top,0px) + 56px) !important}
 </div>
 
 <script>
-const APP_VERSION = '1.30 · 31.10.2026';
+const APP_VERSION = '1.31 · 31.10.2026';
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const pad = n => String(n).padStart(2,'0');
@@ -1777,31 +1772,101 @@ function makePdf(){
   showDeck(pdfDeck(from, to, list));
 }
 
-/* Готовый отчёт показывается на весь экран. На iPhone печать из скрытого окна не работает,
-   поэтому печатается сама страница: всё, кроме отчёта, на время печати скрыто. */
+/* Готовый отчёт показывается на весь экран, а PDF-файл собирается сам: каждая страница рисуется в картинку
+   (html2canvas лежит рядом с приложением) и складывается в PDF. Печать с иконки на iPhone не работает. */
+let deckPdf = null;
 function showDeck(html){
   const css = html.match(/<style>([\s\S]*)<\/style>/)[1]
-    .replace(/(^|})\s*([^{}@]+)\{/g, (m, a, sel) => a + sel.split(',').map(x => x.trim() === 'body' ? '#deck' : '#deck ' + x.trim()).join(',') + '{');
+    .replace(/(^|})\s*([^{}@]+)\{/g, (m, a, sel) => a + sel.split(',').map(x => x.trim() === 'body' ? '.deck' : '.deck ' + x.trim()).join(',') + '{');
   const body = html.match(/<body>([\s\S]*)<\/body>/)[1];
+  const name = html.match(/<title>([^<]*)<\/title>/)[1];
   closeDeck();
   const v = document.createElement('div');
   v.id = 'pdfview';
-  v.innerHTML = `<div class="pv-head"><button class="btn ghost" data-act="closeDeck">Закрыть</button><b>Отчёт</b><button class="btn" data-act="printDeck">Сохранить PDF</button></div>
-    <p class="pv-hint">«Сохранить PDF» → в окне печати «Поделиться» → «Сохранить в Файлы»</p>
-    <div class="pv-scroll"><div id="deck"><style>${css}</style>${body}</div></div>`;
+  v.innerHTML = `<style>${css}</style>
+    <div class="pv-head"><button class="btn ghost" data-act="closeDeck">Закрыть</button><b>Отчёт</b><span style="width:70px"></span></div>
+    <div class="pv-scroll"><div class="deck" id="deck">${body}</div></div>
+    <div class="pv-foot"><p class="pv-hint" id="pv-hint">Собираю PDF…</p><button class="btn wide" id="pv-save" data-act="shareDeck" disabled>Сохранить PDF</button></div>`;
   document.body.appendChild(v);
   fitDeck();
+  deckPdf = null;
+  buildDeckPdf(body, name).then(f => {
+    if (!document.getElementById('pdfview')) return;
+    deckPdf = f;
+    document.getElementById('pv-save').disabled = false;
+    document.getElementById('pv-hint').textContent = 'Откроется «Поделиться»: «Сохранить в Файлы» или отправить';
+  }).catch(() => { const h = document.getElementById('pv-hint'); if (h) h.textContent = 'Не получилось собрать PDF'; });
 }
 function fitDeck(){
   const d = document.getElementById('deck');
-  if (d) d.style.zoom = Math.min(1, (window.innerWidth - 16) / d.scrollWidth);
+  if (d) d.style.zoom = Math.min(1, (window.innerWidth - 16) / 1123);
 }
-function closeDeck(){ document.getElementById('pdfview')?.remove(); }
-function printDeck(){
-  const d = document.getElementById('deck');
-  d.style.zoom = 1;
-  window.print();
-  setTimeout(fitDeck, 500);
+function closeDeck(){ document.getElementById('pdfview')?.remove(); document.getElementById('deck-render')?.remove(); }
+/* Поделиться сразу по нажатию: iPhone разрешает меню «Поделиться» только в момент нажатия */
+async function shareDeck(){
+  if (!deckPdf) return;
+  if (navigator.canShare && navigator.canShare({files: [deckPdf]})) {
+    try { await navigator.share({files: [deckPdf], title: deckPdf.name}); } catch (e) { /* закрыли меню */ }
+  } else download(deckPdf, deckPdf.name);
+}
+function loadH2C(){
+  if (window.html2canvas) return Promise.resolve();
+  return new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'html2canvas.min.js'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); });
+}
+async function buildDeckPdf(body, name){
+  await loadH2C();
+  /* Копия отчёта в полном размере за окном просмотра — с неё и снимаются страницы */
+  const box = document.createElement('div');
+  box.id = 'deck-render';
+  box.className = 'deck';
+  box.style.cssText = 'position:fixed;left:0;top:0;width:1123px;z-index:-1;pointer-events:none';
+  box.innerHTML = body;
+  document.body.appendChild(box);
+  const pages = [];
+  const jpeg = c => new Promise(res => c.toBlob(b => b.arrayBuffer().then(a => res({w: c.width, h: c.height, data: new Uint8Array(a)})), 'image/jpeg', 0.88));
+  try {
+    for (const el of box.querySelectorAll('.slide')) {
+      const c = await html2canvas(el, {scale: 2, backgroundColor: '#ffffff', logging: false, width: 1123, height: 794, windowWidth: 1123});
+      pages.push(await jpeg(c));
+    }
+    const app = box.querySelector('.appendix');
+    if (app) {
+      const c = await html2canvas(app, {scale: 2, backgroundColor: '#ffffff', logging: false, windowWidth: 1123});
+      const ph = Math.round(c.width * 210 / 297);
+      for (let y = 0; y < c.height; y += ph) {
+        const part = document.createElement('canvas');
+        part.width = c.width; part.height = ph;
+        const g = part.getContext('2d');
+        g.fillStyle = '#fff'; g.fillRect(0, 0, part.width, ph);
+        g.drawImage(c, 0, y, c.width, Math.min(ph, c.height - y), 0, 0, c.width, Math.min(ph, c.height - y));
+        pages.push(await jpeg(part));
+      }
+    }
+  } finally { box.remove(); }
+  return new File([pdfFromJpegs(pages)], name + '.pdf', {type: 'application/pdf'});
+}
+/* Простой PDF: каждая страница — одна картинка JPEG на весь лист A4 альбомом */
+function pdfFromJpegs(pages){
+  const enc = new TextEncoder(), parts = [], offs = [];
+  let len = 0;
+  const put = x => { const b = typeof x === 'string' ? enc.encode(x) : x; parts.push(b); len += b.length; };
+  const obj = (n, body) => { offs[n] = len; put(`${n} 0 obj\n`); body(); put('\nendobj\n'); };
+  const W = 842, H = 595, n = pages.length;
+  put('%PDF-1.4\n');
+  obj(1, () => put('<< /Type /Catalog /Pages 2 0 R >>'));
+  obj(2, () => put(`<< /Type /Pages /Count ${n} /Kids [${pages.map((p, i) => `${3 + i * 3} 0 R`).join(' ')}] >>`));
+  pages.forEach((p, i) => {
+    const pg = 3 + i * 3, im = pg + 1, ct = pg + 2;
+    const draw = `q ${W} 0 0 ${H} 0 0 cm /Im0 Do Q`;
+    obj(pg, () => put(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /XObject << /Im0 ${im} 0 R >> >> /Contents ${ct} 0 R >>`));
+    obj(im, () => { put(`<< /Type /XObject /Subtype /Image /Width ${p.w} /Height ${p.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.data.length} >>\nstream\n`); put(p.data); put('\nendstream'); });
+    obj(ct, () => put(`<< /Length ${draw.length} >>\nstream\n${draw}\nendstream`));
+  });
+  const total = 3 + n * 3, xref = len;
+  put(`xref\n0 ${total}\n0000000000 65535 f \n`);
+  for (let k = 1; k < total; k++) put(String(offs[k]).padStart(10, '0') + ' 00000 n \n');
+  put(`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+  return new Blob(parts, {type: 'application/pdf'});
 }
 window.addEventListener('resize', fitDeck);
 
@@ -2054,7 +2119,7 @@ const H = {
   pickCur, delCur,
   exportPdf(){ drawPdfSheet(); },
   pdfPick(el){ st.pdfPick = el.dataset.v; drawPdfSheet(); },
-  makePdf, closeDeck, printDeck,
+  makePdf, closeDeck, shareDeck,
   exportXlsx(){ exportReport('xlsx'); },
   backup(){ backupJson(); },
   reset(){

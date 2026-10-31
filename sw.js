@@ -1,12 +1,13 @@
 // Офлайн-режим приложения. При изменении иконок или манифеста меняйте версию CACHE.
-const CACHE = 'finance-v27';
+const CACHE = 'finance-v28';
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
   './icon-180.png',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './html2canvas.min.js'
 ];
 
 // cache: 'reload' — берём свежие файлы с сайта, а не старые из памяти телефона (GitHub держит их до 10 минут)
