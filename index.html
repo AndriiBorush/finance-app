@@ -203,6 +203,8 @@ h3{font-size:13px;color:var(--muted);margin:18px 4px 8px;font-weight:600;text-tr
 .rcal-grid button{min-height:48px;border-radius:10px;padding:4px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-variant-numeric:tabular-nums}
 .rcal-grid button[aria-current="true"]{background:var(--accent);color:var(--on-accent)}
 .rcal-grid .dnum{font-size:14px}
+.rcal-grid button.today{box-shadow:inset 0 0 0 1.5px var(--accent);background:rgba(108,140,255,.14)}
+.rcal-grid button.today .dnum{color:var(--accent);font-weight:700}
 .rcal-grid em{font-style:normal;font-size:10.5px;line-height:1.1}
 .rcal-grid em.neg{color:var(--red)}
 .rcal-grid em.pos{color:var(--green)}
@@ -262,7 +264,7 @@ main{padding-top:calc(env(safe-area-inset-top,0px) + 56px) !important}
 </div>
 
 <script>
-const APP_VERSION = '1.25 · 31.10.2026';
+const APP_VERSION = '1.26 · 31.10.2026';
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const pad = n => String(n).padStart(2,'0');
@@ -1010,7 +1012,7 @@ function repCal(list){
   for (let d = 1; d <= days; d++) {
     const key = `${y}-${pad(m)}-${pad(d)}`;
     const s = sums[key];
-    cells.push(`<button data-act="repDay" data-v="${key}" aria-current="${key === st.date && st.mode === 'day'}"><span class="dnum">${d}</span>${s && s.e ? `<em class="neg">−${Math.round(s.e)} $</em>` : ''}${s && s.i ? `<em class="pos">+${Math.round(s.i)} $</em>` : ''}</button>`);
+    cells.push(`<button data-act="repDay" data-v="${key}"${key === todayISO() ? ' class="today"' : ''} aria-current="${key === st.date && st.mode === 'day'}"><span class="dnum">${d}</span>${s && s.e ? `<em class="neg">−${Math.round(s.e)} $</em>` : ''}${s && s.i ? `<em class="pos">+${Math.round(s.i)} $</em>` : ''}</button>`);
   }
   return `<div class="rcal">
     <div class="rcal-head"><button class="nav" data-act="repCalStep" data-v="-1" aria-label="Месяц назад">‹</button><span>${MONTHS[m-1]} ${y}</span><button class="nav" data-act="repCalStep" data-v="1" aria-label="Месяц вперёд">›</button></div>
